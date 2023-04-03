@@ -13,7 +13,7 @@ customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
 num_device = [1,1] # Para la MOTU en la Mac Mini
 mask_channel = 7 # Canal para el enmascarante esto corresponde al canal 5 de la MOTU
-db_roved_max = 5 # maximo roveo en dB (para arriba y para abajo en pasos de 1 dB)
+db_roved_max = 10 # maximo roveo en dB (para arriba y para abajo en pasos de 1 dB)
 fs = 96000
 audio_path = "./Audios/" # de donde lee los audio
 data_path = "./Data/" # donde guarda los csv y npz
