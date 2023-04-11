@@ -217,7 +217,7 @@ def audio_init(device=None,fs=fs):
     sd.default.samplerate = fs
 
 def play_stim(stimuli,db_adjust,nchannel):
-    # le da play a la señal stimuli con el ajuste en db db?adjust
+    # le da play a la señal stimuli con el ajuste en db db adjust
     # a traves del canal nchannel. Atencion normalmentes es non blocking
     # pero aca usamos la opcion blocking para que no se pueda hacer nada 
     # mientras se reproduce el audio, esto incluye modificar las ventanas 
