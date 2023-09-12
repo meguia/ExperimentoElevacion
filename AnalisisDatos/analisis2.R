@@ -105,22 +105,22 @@ rm("res3", "tabla.ind.Floor", "tabla.ind.Eye", "tabla.raw")
 
 #Distance
 #percived_distance and target_distance lin
-m.Dist <-  lmer(percived_distance ~ target_distance*condition + (target_distance|subject),
+m.Dist.lin <-  lmer(percived_distance ~ target_distance*condition + (target_distance|subject),
                 data = filter(results_tbl,type == "NORMAL"))
 
-# m.Dist1 <-  lme(percived_distance ~ target_distance*condition, random = ~target_distance|subject,  
+# m.Dist1 <-  lme(percived_distance ~ target_distance*condition, random = ~target_distance|subject,
 #                 data = filter(results_tbl,type == "NORMAL"))
 # extract_stats(ggcoefstats(m.Dist1))
 # anova(m.Dist1)
 
-extract_stats(ggcoefstats(m.Dist))
-anova(m.Dist)
+extract_stats(ggcoefstats(m.Dist.lin))
+anova(m.Dist.lin)
  
 # results_tbl$Predsubject = fitted(m.Dist1, level=1)
 # results_tbl$PredPob    = fitted(m.Dist1, level=0)
 
-results_tbl$Predsubject = fitted(m.Dist, level=1)
-results_tbl$PredPob   = fitted(m.Dist, level=0)
+results_tbl$Predsubject.lin = fitted(m.Dist.lin, level=1)
+# results_tbl$PredPob   = fitted(m.Dist, level=0)
 
 # eq1 <- substitute("Ear level"~~~~~~italic(y) == a %.% italic(X)^italic(b), 
 #                   list(a = 0.51,
@@ -133,14 +133,18 @@ results_tbl$PredPob   = fitted(m.Dist, level=0)
 tabla.pob = filter(results_tbl,type == "NORMAL") %>% group_by(target_distance,condition) %>%
   summarise(Mperc_dist  = mean(percived_distance))  %>%
   ungroup()
-
+tabla.pob$PredPob.lin = 0
+idx = tabla.pob$condition == "Ear level"
+tabla.pob[idx,]$PredPob.lin = 0.3322*c(2,2.9,4.2,6)+0.9702
+idx = tabla.pob$condition == "Floor level"
+tabla.pob[idx,]$PredPob.lin = (0.3322+0.3351)*c(2,2.9,4.2,6)+(0.9702-0.8352)
 
 cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
-f1 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition, color  = condition)) + 
-  # geom_line(size = 2)+
-  geom_line(data = results_tbl, aes(x=target_distance, y = PredPob, color = condition), size = 1.5) +
+f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition, color  = condition)) + 
+  geom_line(size = 2)+
+  # geom_line(data = results_tbl, aes(x=target_distance, y = PredPob.lin, color = condition), size = 1.5) +
   geom_abline(intercept = 0, slope = 1, linetype=2) +
-  geom_line(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x=target_distance, y=Predsubject, group = interaction(subject,condition)) ,
+  geom_line(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x=target_distance, y=Predsubject.lin, group = interaction(subject,condition)) ,
             alpha=.4, size=0.4)+
   scale_colour_manual(values = cbPalette) + 
   scale_fill_manual(values = cbPalette) + 
@@ -159,14 +163,14 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition,
   results_tbl$target_distance_log <-  log10(results_tbl$target_distance)
   
 
-  m.Dist <-  lmer(percived_distance_log ~ target_distance_log*condition + (target_distance_log|subject),
+  m.Dist.log <-  lmer(percived_distance_log ~ target_distance_log*condition + (target_distance_log|subject),
                   data = filter(results_tbl,type == "NORMAL"))
   
-  extract_stats(ggcoefstats(m.Dist))
-  anova(m.Dist)
+  extract_stats(ggcoefstats(m.Dist.log))
+  anova(m.Dist.log)
   
   
-  results_tbl$Predsubject = fitted(m.Dist, level=1)
+  results_tbl$Predsubject.log = fitted(m.Dist.log, level=1)
   # results_tbl$PredPob    = fitted(m.Dist, level=0)
   
   #   eq1 <- substitute("Ear level"~~~~~~italic(y) == a %.% italic(X)^italic(b), 
@@ -180,18 +184,129 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition,
   tabla.pob = filter(results_tbl,type == "NORMAL") %>% group_by(target_distance,condition) %>%
     summarise(Mperc_dist  = mean(percived_distance))  %>%
     ungroup()
-  tabla.pob$PredPob = 0
+  tabla.pob$PredPob.log = 0
   idx = tabla.pob$condition == "Ear level"
-  tabla.pob[idx,]$PredPob = 0.61245*log10(c(2,2.9,4.2,6))+(-0.06628)
+  tabla.pob[idx,]$PredPob.log = 0.61245*log10(c(2,2.9,4.2,6))+(-0.06628)
   idx = tabla.pob$condition == "Floor level"
-  tabla.pob[idx,]$PredPob = (0.61245-0.34018)*log10(c(2,2.9,4.2,6))+(-0.06628+0.11821)
+  tabla.pob[idx,]$PredPob.log = (0.61245+0.34018)*log10(c(2,2.9,4.2,6))+(-0.06628-0.11821)
   
   cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
-  f1 <- ggplot(tabla.pob, aes(x=target_distance, y =10^PredPob, group = condition, fill = condition, color  = condition)) + 
+  f1 <- ggplot(tabla.pob, aes(x=target_distance, y =10^PredPob.log, group = condition, fill = condition, color  = condition)) + 
     geom_line(size = 2)+
    # geom_line(data = results_tbl, aes(x=target_distance, y = 10^PredPob, color = condition), size = 1.5) +
     geom_abline(intercept = 0, slope = 1, linetype=2) +
-    geom_line(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x=target_distance, y=10^Predsubject, group = interaction(subject,condition)) ,
+    geom_line(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x=target_distance, y=10^Predsubject.log, group = interaction(subject,condition)) ,
+              alpha=.4, size=0.4)+
+    scale_colour_manual(values = cbPalette) + 
+    scale_fill_manual(values = cbPalette) + 
+    #geom_text(x = .5, y = .9, label = as.character(as.expression(eq1)), parse = TRUE, size = 4, color = "#000000")+
+    #geom_text(x = .5, y = .76, label = as.character(as.expression(eq2)), parse = TRUE, size = 4, color = "#E69F00")+
+    scale_x_continuous(name="Distance source (m)", breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,8)) +
+    scale_y_continuous(name="Perceived distance (m)",  breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,8)) +
+
+    # scale_x_log10(name="Distance source (m)") +
+    # scale_y_log10(name="Perceived distance (m)") +
+    theme_pubr(base_size = 12, margin = TRUE)+
+    theme(legend.position = "top",
+          legend.title = element_blank())
+  
+  f1
+  
+  
+# ROVED DISTANCE  ------
+  #Distance
+  #percived_distance and target_distance lin
+  m.Dist.lin.r <-  lmer(percived_distance ~ target_distance*condition + (target_distance|subject),
+                      data = filter(results_tbl,type == "ROVED"))
+  
+  # m.Dist1 <-  lme(percived_distance ~ target_distance*condition, random = ~target_distance|subject,
+  #                 data = filter(results_tbl,type == "NORMAL"))
+  # extract_stats(ggcoefstats(m.Dist1))
+  # anova(m.Dist1)
+  
+  extract_stats(ggcoefstats(m.Dist.lin.r))
+  anova(m.Dist.lin.r)
+  
+  # results_tbl$Predsubject = fitted(m.Dist1, level=1)
+  # results_tbl$PredPob    = fitted(m.Dist1, level=0)
+  
+  results_tbl$Predsubject.lin.r = fitted(m.Dist.lin.r, level=1)
+  # results_tbl$PredPob   = fitted(m.Dist, level=0)
+  
+  # eq1 <- substitute("Ear level"~~~~~~italic(y) == a %.% italic(X)^italic(b), 
+  #                   list(a = 0.51,
+  #                        b = 0.98))
+  # eq2 <- substitute("Floor level"~~~italic(y) == a %.% italic(X)^italic(b), 
+  #                   list(a = 0.44,
+  #                        b = 0.59))
+  
+  
+  tabla.pob = filter(results_tbl,type == "NORMAL") %>% group_by(target_distance,condition) %>%
+    summarise(Mperc_dist  = mean(percived_distance))  %>%
+    ungroup()
+  tabla.pob$PredPob.lin.r = 0
+  idx = tabla.pob$condition == "Ear level"
+  tabla.pob[idx,]$PredPob.lin.r = 0.1058*c(2,2.9,4.2,6)+2.0402
+  idx = tabla.pob$condition == "Floor level"
+  tabla.pob[idx,]$PredPob.lin.r = (0.1058+0.3997)*c(2,2.9,4.2,6)+(2.0402-1.3759)
+  
+  cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
+  f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin.r, group = condition, color  = condition)) + 
+    geom_line(size = 2)+
+    # geom_line(data = results_tbl, aes(x=target_distance, y = PredPob.lin, color = condition), size = 1.5) +
+    geom_abline(intercept = 0, slope = 1, linetype=2) +
+    geom_line(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x=target_distance, y=Predsubject.lin.r, group = interaction(subject,condition)) ,
+              alpha=.4, size=0.4)+
+    scale_colour_manual(values = cbPalette) + 
+    scale_fill_manual(values = cbPalette) + 
+    #geom_text(x = .5, y = .9, label = as.character(as.expression(eq1)), parse = TRUE, size = 4, color = "#000000")+
+    #geom_text(x = .5, y = .76, label = as.character(as.expression(eq2)), parse = TRUE, size = 4, color = "#E69F00")+
+    scale_x_continuous(name="Distance source (m)", breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,8)) +
+    scale_y_continuous(name="Perceived distance (m)",  breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,8)) +
+    theme_pubr(base_size = 12, margin = TRUE)+
+    theme(legend.position = "top",
+          legend.title = element_blank())
+  
+  f1
+  #--
+  #percived_distance and target_distance in log10()
+  results_tbl$percived_distance_log <-  log10(results_tbl$percived_distance)
+  results_tbl$target_distance_log <-  log10(results_tbl$target_distance)
+  
+  
+  m.Dist.log.r <-  lmer(percived_distance_log ~ target_distance_log*condition + (target_distance_log|subject),
+                      data = filter(results_tbl,type == "ROVED"))
+  
+  extract_stats(ggcoefstats(m.Dist.log.r))
+  anova(m.Dist.log.r)
+  
+  
+  results_tbl$Predsubject.log.r = fitted(m.Dist.log.r, level=1)
+  # results_tbl$PredPob    = fitted(m.Dist, level=0)
+  
+  #   eq1 <- substitute("Ear level"~~~~~~italic(y) == a %.% italic(X)^italic(b), 
+  #                   list(a = 0.51,
+  #                        b = 0.98))
+  # eq2 <- substitute("Floor level"~~~italic(y) == a %.% italic(X)^italic(b), 
+  #                   list(a = 0.44,
+  #                        b = 0.59))
+  
+  
+  tabla.pob = filter(results_tbl,type == "NORMAL") %>% group_by(target_distance,condition) %>%
+    summarise(Mperc_dist  = mean(percived_distance))  %>%
+    ungroup()
+  tabla.pob$PredPob.log.r = 0
+  idx = tabla.pob$condition == "Ear level"
+  tabla.pob[idx,]$PredPob.log.r = 0.2700*log10(c(2,2.9,4.2,6))+(0.1506)
+  idx = tabla.pob$condition == "Floor level"
+  tabla.pob[idx,]$PredPob.log.r = (0.2700+0.5060)*log10(c(2,2.9,4.2,6))+(0.1506-0.2460)
+  
+  cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
+  f1 <- ggplot(tabla.pob, aes(x=target_distance, y =10^PredPob.log.r, group = condition, fill = condition, color  = condition)) + 
+    geom_line(size = 2)+
+    # geom_line(data = results_tbl, aes(x=target_distance, y = 10^PredPob, color = condition), size = 1.5) +
+    geom_abline(intercept = 0, slope = 1, linetype=2) +
+    geom_line(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x=target_distance, y=10^Predsubject.log.r, group = interaction(subject,condition)) ,
               alpha=.4, size=0.4)+
     scale_colour_manual(values = cbPalette) + 
     scale_fill_manual(values = cbPalette) + 
@@ -205,7 +320,9 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition,
   
   f1
   
-## Bias signed
+  
+  
+## Bias signed-----
 f2 <- filter(results_tbl,type == "NORMAL") %>% 
   group_by(subject,condition) %>%
   summarise(mSesgoRel  = mean(rel_bias)) %>%
@@ -235,6 +352,15 @@ f2 <- filter(results_tbl,type == "NORMAL") %>%
   theme(legend.position = "none")
 
 f2
+aaa <- filter(results_tbl,type == "NORMAL") %>% 
+  group_by(subject,condition) %>%
+  summarise(mSesgoRel  = mean(rel_bias)) %>%
+  ungroup()
+m.RelativBias <- lm(mSesgoRel ~ condition, 
+                    data = aaa)
+anova(m.RelativBias)
+
+
 # Response variability
 ## Intra-subject
 tabla.ind.var <- filter(results_tbl,type == "NORMAL") %>% 
