@@ -12,6 +12,9 @@ library(ggpubr)
 library(Routliers)
 
 rm(list=ls())
+figures_folder = "figuras"
+
+
 tabla.raw <- read.csv("./DatosUnificados/datacrudafinal2.csv", header = TRUE, sep = ';', stringsAsFactors = TRUE)
 tabla.raw$abs_bias <-  tabla.raw$percived_distance - tabla.raw$target_distance
 tabla.raw$rel_bias <- (tabla.raw$percived_distance - tabla.raw$target_distance) / tabla.raw$target_distance
@@ -148,6 +151,7 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition
             alpha=.4, size=0.4)+
   scale_colour_manual(values = cbPalette) + 
   scale_fill_manual(values = cbPalette) + 
+  ggtitle("Lineal Normal")+
   #geom_text(x = .5, y = .9, label = as.character(as.expression(eq1)), parse = TRUE, size = 4, color = "#000000")+
   #geom_text(x = .5, y = .76, label = as.character(as.expression(eq2)), parse = TRUE, size = 4, color = "#E69F00")+
   scale_x_continuous(name="Distance source (m)", breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,8)) +
@@ -157,6 +161,10 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition
         legend.title = element_blank())
 
   f1
+  mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "Lineal-Normal", ".png", sep = '')
+  ggsave(mi_nombre_de_archivo, plot=f1, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
+  
+  
  #--
   #percived_distance and target_distance in log10()
   results_tbl$percived_distance_log <-  log10(results_tbl$percived_distance)
@@ -199,6 +207,7 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition
               alpha=.4, size=0.4)+
     scale_colour_manual(values = cbPalette) + 
     scale_fill_manual(values = cbPalette) + 
+    ggtitle("Log Normal")+
     #geom_text(x = .5, y = .9, label = as.character(as.expression(eq1)), parse = TRUE, size = 4, color = "#000000")+
     #geom_text(x = .5, y = .76, label = as.character(as.expression(eq2)), parse = TRUE, size = 4, color = "#E69F00")+
     scale_x_continuous(name="Distance source (m)", breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,8)) +
@@ -211,6 +220,8 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition
           legend.title = element_blank())
   
   f1
+  mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "Log-Normal", ".png", sep = '')
+  ggsave(mi_nombre_de_archivo, plot=f1, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
   
   
 # ROVED DISTANCE  ------
@@ -259,6 +270,7 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition
               alpha=.4, size=0.4)+
     scale_colour_manual(values = cbPalette) + 
     scale_fill_manual(values = cbPalette) + 
+    ggtitle("Lineal Roved")+
     #geom_text(x = .5, y = .9, label = as.character(as.expression(eq1)), parse = TRUE, size = 4, color = "#000000")+
     #geom_text(x = .5, y = .76, label = as.character(as.expression(eq2)), parse = TRUE, size = 4, color = "#E69F00")+
     scale_x_continuous(name="Distance source (m)", breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,8)) +
@@ -268,6 +280,9 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition
           legend.title = element_blank())
   
   f1
+  mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "Lineal-Roved", ".png", sep = '')
+  ggsave(mi_nombre_de_archivo, plot=f1, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
+  
   #--
   #percived_distance and target_distance in log10()
   results_tbl$percived_distance_log <-  log10(results_tbl$percived_distance)
@@ -310,6 +325,7 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition
               alpha=.4, size=0.4)+
     scale_colour_manual(values = cbPalette) + 
     scale_fill_manual(values = cbPalette) + 
+    ggtitle("Log Roved")+
     #geom_text(x = .5, y = .9, label = as.character(as.expression(eq1)), parse = TRUE, size = 4, color = "#000000")+
     #geom_text(x = .5, y = .76, label = as.character(as.expression(eq2)), parse = TRUE, size = 4, color = "#E69F00")+
     scale_x_continuous(name="Distance source (m)", breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,8)) +
@@ -319,6 +335,8 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition
           legend.title = element_blank())
   
   f1
+  mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "Log-Roved", ".png", sep = '')
+  ggsave(mi_nombre_de_archivo, plot=f1, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
   
   
   
