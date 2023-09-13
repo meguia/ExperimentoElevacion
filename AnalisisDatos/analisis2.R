@@ -1,6 +1,5 @@
 library(tidyverse)
 library(lme4)
-library(janitor)
 library(nlme)
 library(lmerTest)
 library(emmeans)
@@ -31,6 +30,39 @@ f_promedio <- function(x) c(mean = mean(x),
 results_tbl <- tibble(aggregate(cbind(percived_distance,rel_bias,abs_bias) ~ subject*block*condition*target_distance*type,
                               data = tabla.raw,
                               FUN  = f_promedio,na.action = NULL))
+
+# Graf datos crudos
+cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
+f.all = ggplot(results_tbl, aes(x = target_distance, y = percived_distance[,"mean"], colour = condition, fill = condition))+
+  geom_point(alpha = 0.4, 
+             position = position_jitterdodge(jitter.width = .3,
+                                             jitter.height = 0,
+                                             dodge.width = 1 )) +
+  scale_colour_manual(values = cbPalette) + 
+  scale_fill_manual(values = cbPalette) + 
+
+  geom_abline(slope = 0, 
+              intercept = 0, 
+              alpha = 0.5, 
+              linetype = "dashed") +
+  stat_summary(fun.data = "mean_se", 
+               geom = "pointrange", 
+               alpha = .4, 
+               position = position_dodge(width = 1)) +
+  # stat_summary(fun.data = "mean_se", 
+  #              geom = "linerange",  
+  #              size=2, 
+  #              position = position_dodge(width = 1)) + 
+  #geom_text(x = .5, y = .9, label = as.character(as.expression(eq1)), parse = TRUE, size = 4, color = "#000000")+
+  #geom_text(x = .5, y = .76, label = as.character(as.expression(eq2)), parse = TRUE, size = 4, color = "#E69F00")+
+  scale_x_continuous(name="Distance source (m)", breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,8)) +
+  scale_y_continuous(name="Perceived distance (m)",  breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,8)) +
+  facet_grid(type ~ subject) +
+  theme_pubr(base_size = 12, margin = TRUE)+
+  theme(legend.position = "top",
+        legend.title = element_blank())
+f.all
+
 
 
 results_tbl %>%
@@ -163,6 +195,59 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition
   f1
   mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "Lineal-Normal", ".png", sep = '')
   ggsave(mi_nombre_de_archivo, plot=f1, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
+  
+  #por sujeto
+  f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition, color  = condition)) + 
+    # geom_line(size = 2)+
+    # geom_line(data = results_tbl, aes(x=target_distance, y = PredPob.lin, color = condition), size = 1.5) +
+    geom_abline(intercept = 0, slope = 1, linetype=2) +
+    geom_line(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x=target_distance, y=Predsubject.lin, group = interaction(subject,condition)) ,
+              alpha=1, size=0.4)+
+    geom_point(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = target_distance, y = perc_dist),
+               alpha = 1, 
+               position = position_jitterdodge(jitter.width = .3,
+                                               jitter.height = 0,
+                                               dodge.width = 1 )) +
+    scale_colour_manual(values = cbPalette) + 
+    scale_fill_manual(values = cbPalette) + 
+    
+    #geom_text(x = .5, y = .9, label = as.character(as.expression(eq1)), parse = TRUE, size = 4, color = "#000000")+
+    #geom_text(x = .5, y = .76, label = as.character(as.expression(eq2)), parse = TRUE, size = 4, color = "#E69F00")+
+    scale_x_continuous(name="Distance source (m)", breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,7)) +
+    scale_y_continuous(name="Perceived distance (m)",  breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,7)) +
+    facet_wrap(. ~ subject) +
+    theme_pubr(base_size = 12, margin = TRUE)+
+    theme(legend.position = "top",
+          legend.title = element_blank())
+  
+  f1
+  mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "Lineal-Normal.ALL", ".png", sep = '')
+  ggsave(mi_nombre_de_archivo, plot=f1, width=30, height=30, units="cm", limitsize=FALSE, dpi=600)
+  
+  # Poblacional
+  
+  #por sujeto
+  f1.p <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition, color  = condition)) + 
+    geom_line(size = 1)+
+    # geom_line(data = results_tbl, aes(x=target_distance, y = PredPob.lin, color = condition), size = 1.5) +
+    geom_abline(intercept = 0, slope = 1, linetype=2) +
+    geom_point(aes(x = target_distance, y = Mperc_dist),
+               alpha = 1)+
+    scale_colour_manual(values = cbPalette) + 
+    scale_fill_manual(values = cbPalette) + 
+    
+    #geom_text(x = .5, y = .9, label = as.character(as.expression(eq1)), parse = TRUE, size = 4, color = "#000000")+
+    #geom_text(x = .5, y = .76, label = as.character(as.expression(eq2)), parse = TRUE, size = 4, color = "#E69F00")+
+    scale_x_continuous(name="Distance source (m)", breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,7)) +
+    scale_y_continuous(name="Perceived distance (m)",  breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,7)) +
+    # facet_wrap(. ~ subject) +
+    theme_pubr(base_size = 12, margin = TRUE)+
+    theme(legend.position = "top",
+          legend.title = element_blank())
+  
+  f1.p
+  mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "Lineal-Normal.pob", ".png", sep = '')
+  ggsave(mi_nombre_de_archivo, plot=f1.p, width=10, height=10, units="cm", limitsize=FALSE, dpi=600)
   
   
  #--
@@ -337,6 +422,66 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition
   f1
   mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "Log-Roved", ".png", sep = '')
   ggsave(mi_nombre_de_archivo, plot=f1, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
+  
+  
+# Slops graf ------
+  
+tabla.pob.slope <- results_tbl %>% 
+      group_by(subject, condition, type) %>%
+      summarise(mSesgoRel  = mean(rel_bias)) %>%
+      ungroup()
+  tabla.pob.slope$slope = 0
+  idx = tabla.pob.slope$condition == "Ear level" & tabla.pob.slope$type == "NORMAL"
+  tabla.pob.slope[idx,]$slope = coef(m.Dist.lin)$subject$target_distance
+  idx = tabla.pob.slope$condition == "Floor level"& tabla.pob.slope$type == "NORMAL"
+  tabla.pob.slope[idx,]$slope = coef(m.Dist.lin)$subject$target_distance + coef(m.Dist.lin)$subject$`target_distance:conditionFloor level`
+  
+  
+  idx = tabla.pob.slope$condition == "Ear level" & tabla.pob.slope$type == "ROVED"
+  tabla.pob.slope[idx,]$slope = coef(m.Dist.lin.r)$subject$target_distance
+  idx = tabla.pob.slope$condition == "Floor level"& tabla.pob.slope$type == "ROVED"
+  tabla.pob.slope[idx,]$slope = coef(m.Dist.lin.r)$subject$target_distance + coef(m.Dist.lin.r)$subject$`target_distance:conditionFloor level`
+  
+  
+ f2 =  ggplot(tabla.pob.slope, aes(x = condition,y = slope, colour = condition, fill = condition)) +
+   geom_line(aes(group = subject), alpha = 0.3)+ 
+   geom_point(alpha = 1) +
+    scale_colour_manual(values = cbPalette) + 
+    scale_fill_manual(values = cbPalette) + 
+    geom_abline(slope = 0,
+                intercept = 0,
+                alpha = 0.5,
+                linetype = "dashed") +
+    stat_summary(fun.data = "mean_se",
+                 geom = "pointrange",
+                 alpha = 1,
+                 size = 1,
+                 # position = position_dodge(width = 1)
+                 position = position_jitterdodge(jitter.width = 0.6,
+                                                 jitter.height = 0,
+                                                 dodge.width = 0 )) +
+    # stat_summary(fun.data = "mean_se",
+    #              geom = "linerange",
+    #              size=2,
+    #              position = position_dodge(width = 1)) +
+    labs(x = "Condition", 
+         y = "Slope with LMER") +
+   facet_grid(. ~ type) +
+    theme_pubr(base_size = 12, margin = TRUE)+
+    theme(legend.position = "none")
+  
+  f2
+  mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "Slope", ".png", sep = '')
+  ggsave(mi_nombre_de_archivo, plot=f2, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   
   
