@@ -13,7 +13,7 @@ library(Routliers)
 rm(list=ls())
 figures_folder = "figuras"
 
-
+#Data entry -----
 tabla.raw <- read.csv("./DatosUnificados/datacrudafinal2.csv", header = TRUE, sep = ';', stringsAsFactors = TRUE)
 tabla.raw$abs_bias <-  tabla.raw$percived_distance - tabla.raw$target_distance
 tabla.raw$rel_bias <- (tabla.raw$percived_distance - tabla.raw$target_distance) / tabla.raw$target_distance
@@ -35,34 +35,40 @@ results_tbl <- tibble(aggregate(cbind(percived_distance,rel_bias,abs_bias) ~ sub
 cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
 f.all = ggplot(results_tbl, aes(x = target_distance, y = percived_distance[,"mean"], colour = condition, fill = condition))+
   geom_point(alpha = 0.4, 
-             position = position_jitterdodge(jitter.width = .3,
+             position = position_jitterdodge(jitter.width = .1,
                                              jitter.height = 0,
-                                             dodge.width = 1 )) +
+                                             dodge.width = .1 )) +
+  geom_point(data = tabla.raw, aes(x=target_distance, y = percived_distance, color = condition),
+                                       alpha = 0.4, size = .6,
+             position = position_jitterdodge(jitter.width = .1,
+                                             jitter.height = 0,
+                                             dodge.width = .1 )) +
   scale_colour_manual(values = cbPalette) + 
   scale_fill_manual(values = cbPalette) + 
 
-  geom_abline(slope = 0, 
+  geom_abline(slope = 1, 
               intercept = 0, 
               alpha = 0.5, 
               linetype = "dashed") +
-  stat_summary(fun.data = "mean_se", 
-               geom = "pointrange", 
-               alpha = .4, 
-               position = position_dodge(width = 1)) +
+  # stat_summary(fun.data = "mean_se", 
+  #              geom = "pointrange", 
+  #              alpha = .4, 
+  #              position = position_dodge(width = 1)) +
   # stat_summary(fun.data = "mean_se", 
   #              geom = "linerange",  
   #              size=2, 
   #              position = position_dodge(width = 1)) + 
   #geom_text(x = .5, y = .9, label = as.character(as.expression(eq1)), parse = TRUE, size = 4, color = "#000000")+
   #geom_text(x = .5, y = .76, label = as.character(as.expression(eq2)), parse = TRUE, size = 4, color = "#E69F00")+
-  scale_x_continuous(name="Distance source (m)", breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,8)) +
-  scale_y_continuous(name="Perceived distance (m)",  breaks=c(0,2,2.9,4.2,6,7), labels=c("",2,2.9,4.2,6,""), minor_breaks=NULL, limits = c(0,8)) +
+  scale_x_continuous(name="Distance source (m)", limits = c(-1,20)) +
+  scale_y_continuous(name="Perceived distance (m)",   limits = c(-1,20)) +
   facet_grid(type ~ subject) +
   theme_pubr(base_size = 12, margin = TRUE)+
   theme(legend.position = "top",
         legend.title = element_blank())
 f.all
-
+mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "All data", ".png", sep = '')
+ggsave(mi_nombre_de_archivo, plot=f.all, width=90, height=10, units="cm", limitsize=FALSE, dpi=600)
 
 
 results_tbl %>%
@@ -90,7 +96,7 @@ results_tbl %>%
 
 results_tbl <- read.csv("./DatosUnificados/results.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
 
-# Outliers ----
+# Analysis Outliers ----
 
 tabla.ind.Eye <- results_tbl %>% 
   filter(condition == "Ear level", type == "NORMAL") %>% 
@@ -136,7 +142,113 @@ idx = results_tbl$subject == "S012"
 results_tbl = results_tbl[!idx,]
 
 rm("res3", "tabla.ind.Floor", "tabla.ind.Eye", "tabla.raw")
-### Graf-----
+
+
+### Analysis Slopes -----
+fig = list()
+for (i in 1:length(levels(results_tbl$subject))) {
+  print(i)
+  sub = levels(results_tbl$subject)[i]
+  print(sub)
+  m.pend = lm(percived_distance ~ target_distance*condition,
+              data = filter(results_tbl,type == "NORMAL", subject == sub))
+ 
+  cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
+  
+  
+  eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
+                    list(a = m.pend$coefficients[[2]],
+                         b = m.pend$coefficients[[1]]))
+  eq2 <- substitute("Floor level:"~~~italic(y) == a %.% italic(X)+italic(b), 
+                    list(a = m.pend$coefficients[[2]]+m.pend$coefficients[[4]],
+                         b = m.pend$coefficients[[1]]+m.pend$coefficients[[3]]))
+  eq3 <- substitute("r.squared:"~~~italic(R)^italic(2) == italic(b), 
+                    list(b = summary(m.pend)$r.squared))
+  fig1 = ggplot(filter(results_tbl,type == "NORMAL", subject == sub), 
+                  aes(x = target_distance, y = perc_dist, ymin = perc_dist-perc_dist_sem, ymax = perc_dist+perc_dist_sem, 
+                      colour = condition, fill = condition, group = condition))+
+    geom_pointrange(alpha = 0.4, 
+                    position = position_jitterdodge(jitter.width = .1,
+                                                    jitter.height = 0,
+                                                    dodge.width = .1 ))+
+    scale_colour_manual(values = cbPalette) + 
+    scale_fill_manual(values = cbPalette) + 
+    geom_abline(slope = 1, 
+                intercept = 0, 
+                alpha = 0.5, 
+                linetype = "dashed") +
+    geom_abline(slope = m.pend$coefficients[[2]], 
+                intercept = m.pend$coefficients[[1]], 
+                alpha = 0.5,
+                color = "#000000") +
+    geom_abline(slope = m.pend$coefficients[[2]]+m.pend$coefficients[[4]], 
+                intercept = m.pend$coefficients[[1]]+m.pend$coefficients[[3]], 
+                alpha = 0.5,
+                color = "#E69F00") +
+    geom_text(x = 2.5, y = 6.1, label = as.character(as.expression(eq1)), hjust = 0.5, parse = TRUE, size = 4, color = "#000000")+
+    geom_text(x = 2.5, y = 5.7, label = as.character(as.expression(eq2)), hjust = 0.5,parse = TRUE, size = 4, color = "#E69F00")+
+    geom_text(x = 2.5, y = 5.3, label = as.character(as.expression(eq3)), hjust = 0.5, parse = TRUE, size = 4, color = "#009E73")+
+    scale_x_continuous(name="Distance source (m)", limits = c(0,8)) +
+    scale_y_continuous(name="Perceived distance (m)",   limits = c(0,8)) +
+    theme_pubr(base_size = 12, margin = TRUE)+
+    theme(legend.position = "top",
+          legend.title = element_blank())
+  fig[[i]] = fig1
+
+}
+
+m.pend = lm(percived_distance ~ target_distance*condition,
+            data = filter(results_tbl,type == "NORMAL", subject == "S001"))
+
+cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
+
+
+eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
+                  list(a = m.pend$coefficients[[2]],
+                       b = m.pend$coefficients[[1]]))
+eq2 <- substitute("Floor level:"~~~italic(y) == a %.% italic(X)+italic(b), 
+                  list(a = m.pend$coefficients[[2]]+m.pend$coefficients[[4]],
+                       b = m.pend$coefficients[[1]]+m.pend$coefficients[[3]]))
+eq3 <- substitute("Adj.r.squared:"~~~italic(R)^italic(2) == italic(b), 
+                  list(b = summary(m.pend)$adj.r.squared))
+
+
+f.2 = ggplot(filter(results_tbl,type == "NORMAL", subject == "S001"), 
+             aes(x = target_distance, y = perc_dist, ymin = perc_dist-perc_dist_sem, ymax = perc_dist+perc_dist_sem, 
+                 colour = condition, fill = condition, group = condition))+
+  geom_pointrange(alpha = 0.4, 
+                             position = position_jitterdodge(jitter.width = .1,
+                                                             jitter.height = 0,
+                                                             dodge.width = .1 ))+
+  scale_colour_manual(values = cbPalette) + 
+  scale_fill_manual(values = cbPalette) + 
+  geom_abline(slope = 1, 
+              intercept = 0, 
+              alpha = 0.5, 
+              linetype = "dashed") +
+  geom_abline(slope = m.pend$coefficients[[2]], 
+              intercept = m.pend$coefficients[[1]], 
+              alpha = 0.5,
+              color = "#000000") +
+  geom_abline(slope = m.pend$coefficients[[2]]+m.pend$coefficients[[4]], 
+              intercept = m.pend$coefficients[[1]]+m.pend$coefficients[[3]], 
+              alpha = 0.5,
+              color = "#E69F00") +
+  geom_text(x = 2.5, y = 6.1, label = as.character(as.expression(eq1)), hjust = 0.5, parse = TRUE, size = 4, color = "#000000")+
+  geom_text(x = 2.5, y = 5.7, label = as.character(as.expression(eq2)), hjust = 0.5,parse = TRUE, size = 4, color = "#E69F00")+
+  geom_text(x = 2.5, y = 5.3, label = as.character(as.expression(eq3)), hjust = 0.5, parse = TRUE, size = 4, color = "#009E73")+
+  scale_x_continuous(name="Distance source (m)", limits = c(0,8)) +
+  scale_y_continuous(name="Perceived distance (m)",   limits = c(0,8)) +
+  theme_pubr(base_size = 12, margin = TRUE)+
+  theme(legend.position = "top",
+        legend.title = element_blank())
+f.2
+mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "1", ".png", sep = '')
+ggsave(mi_nombre_de_archivo, plot=f.1, width=10, height=10, units="cm", limitsize=FALSE, dpi=600)
+
+
+
+
 
 #Distance
 #percived_distance and target_distance lin
@@ -526,8 +638,8 @@ anova(m.RelativBias)
 
 # Response variability
 ## Intra-subject
-tabla.ind.var <- filter(results_tbl,type == "NORMAL") %>% 
-  group_by(target_distance,condition) %>%
+tabla.ind.var <- filter(results_tbl) %>% 
+  group_by(target_distance,condition,type) %>%
   summarise(mSD = mean(perc_dist_sd),
             SdSd = sd(perc_dist_sd),
             n = n())  %>%
@@ -543,6 +655,7 @@ f3 <- ggplot(tabla.ind.var, aes(x=target_distance, y =mSD, group = condition, co
                             ymax = mSD + (SdSd/sqrt(n)),
                             color=condition))+ 
   geom_abline(intercept = 0, slope = 0, linetype=2) +
+  facet_grid(.~ type )+
   scale_y_log10(name="Standard deviation (m)\n +/- SEM Intra-subject", breaks=c(0,0.2,0.3,0.4,0.5,0.6), labels=c(0,0.2,0.3,0.4,0.5,0.6), minor_breaks=NULL, limits = c(-1.1,1.85)) +
   scale_x_log10(name="Distance source (m)",  breaks=c(2,2.9,4.2,6), labels=c(2,2.9,4.2,6), minor_breaks=NULL, limits = c(1.9,6.1)) +
   theme_pubr(base_size = 12, margin = TRUE)+
@@ -550,6 +663,31 @@ f3 <- ggplot(tabla.ind.var, aes(x=target_distance, y =mSD, group = condition, co
         legend.title = element_blank())
 
 f3
+
+tabla.ind.var <- filter(results_tbl,type == "ROVED") %>% 
+  group_by(target_distance,condition) %>%
+  summarise(mSD = mean(perc_dist_sd),
+            SdSd = sd(perc_dist_sd),
+            n = n())  %>%
+  ungroup()
+
+f31 <- ggplot(tabla.ind.var, aes(x=target_distance, y =mSD, group = condition, color = condition)) + 
+  geom_point()+ 
+  geom_line(size = 1)+
+  scale_colour_manual(values = cbPalette) + 
+  scale_fill_manual(values = cbPalette) + 
+  geom_errorbar(data=tabla.ind.var,alpha = 2, width=0, size=1,
+                mapping=aes(ymin = mSD - (SdSd/sqrt(n)), 
+                            ymax = mSD + (SdSd/sqrt(n)),
+                            color=condition))+ 
+  geom_abline(intercept = 0, slope = 0, linetype=2) +
+  scale_y_log10(name="Standard deviation (m)\n +/- SEM Intra-subject", breaks=c(0,0.2,0.3,0.4,0.5,0.6), labels=c(0,0.2,0.3,0.4,0.5,0.6), minor_breaks=NULL, limits = c(-1.1,1.85)) +
+  scale_x_log10(name="Distance source (m)",  breaks=c(2,2.9,4.2,6), labels=c(2,2.9,4.2,6), minor_breaks=NULL, limits = c(1.9,6.1)) +
+  theme_pubr(base_size = 12, margin = TRUE)+
+  theme(legend.position = "top",
+        legend.title = element_blank())
+
+f31
 ## Intra-Sujeto colapsado
 f4 <- filter(results_tbl,type == "NORMAL") %>% 
   group_by(subject,condition) %>%
