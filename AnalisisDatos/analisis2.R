@@ -96,56 +96,9 @@ results_tbl %>%
 
 results_tbl <- read.csv("./DatosUnificados/results.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
 
-# Analysis Outliers ----
-
-tabla.ind.Eye <- results_tbl %>% 
-  filter(condition == "Ear level", type == "NORMAL") %>% 
-  group_by(subject,condition) %>%
-  summarise(mSesgoRel  = mean(rel_bias,na.rm=TRUE))  %>%
-  ungroup()
-res3 <- outliers_mad(x = tabla.ind.Eye$mSesgoRel ,na.rm=TRUE)
-#plot_outliers_mad(res3,x=tabla.ind.Eye$mSesgoRel,pos_display=TRUE)
-tabla.ind.Eye[res3$outliers_pos,] 
-
-tabla.ind.Floor <- results_tbl %>% 
-  filter(condition == "Floor level", type == "NORMAL") %>% 
-  group_by(subject,condition) %>%
-  summarise(mSesgoRel  = mean(rel_bias,na.rm=TRUE))  %>%
-  ungroup()
-res3 <- outliers_mad(x = tabla.ind.Floor$mSesgoRel ,na.rm=TRUE)
-#plot_outliers_mad(res3,x=tabla.ind.Floor$mSesgoRel,pos_display=TRUE)
-tabla.ind.Floor[res3$outliers_pos,] 
-
-# 1 - ABS bias
-
-tabla.ind.Eye <- results_tbl %>% 
-  filter(condition == "Ear level", type == "NORMAL") %>% 
-  group_by(subject,condition) %>%
-  summarise(mSesgoAbs  = mean(abs_bias,na.rm=TRUE))  %>%
-  ungroup()
-res3 <- outliers_mad(x = tabla.ind.Eye$mSesgoAbs ,na.rm=TRUE)
-#plot_outliers_mad(res3,x=tabla.ind.Eye$mSesgoAbs,pos_display=TRUE)
-tabla.ind.Eye[res3$outliers_pos,] 
-
-tabla.ind.Floor <- results_tbl %>% 
-  filter(condition == "Floor level", type == "NORMAL") %>% 
-  group_by(subject,condition) %>%
-  summarise(mSesgoAbs  = mean(abs_bias,na.rm=TRUE))  %>%
-  ungroup()
-res3 <- outliers_mad(x = tabla.ind.Floor$mSesgoAbs ,na.rm=TRUE)
-#plot_outliers_mad(res3,x=tabla.ind.Floor$mSesgoAbs,pos_display=TRUE)
-tabla.ind.Floor[res3$outliers_pos,]
-
-idx = results_tbl$subject == "S003"
-results_tbl = results_tbl[!idx,]
-idx = results_tbl$subject == "S012"
-results_tbl = results_tbl[!idx,]
-
-rm("res3", "tabla.ind.Floor", "tabla.ind.Eye", "tabla.raw")
-
-
 ### Analysis Slopes -----
 results_tbl$slope = 0
+results_tbl$intercepto = 0
 fig_normal = list()
 for (i in 1:length(levels(results_tbl$subject))) {
   print(i)
@@ -156,7 +109,8 @@ for (i in 1:length(levels(results_tbl$subject))) {
 
   results_tbl[(results_tbl$type == "NORMAL" & results_tbl$subject == sub &results_tbl$condition == "Ear level"),]$slope = m.pend$coefficients[[2]]
   results_tbl[(results_tbl$type == "NORMAL" & results_tbl$subject == sub &results_tbl$condition == "Floor level"),]$slope = m.pend$coefficients[[2]]+m.pend$coefficients[[4]]
-  
+  results_tbl[(results_tbl$type == "NORMAL" & results_tbl$subject == sub &results_tbl$condition == "Ear level"),]$intercepto = m.pend$coefficients[[1]]
+  results_tbl[(results_tbl$type == "NORMAL" & results_tbl$subject == sub &results_tbl$condition == "Floor level"),]$intercepto = m.pend$coefficients[[1]]+m.pend$coefficients[[3]]
   
   cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
   
@@ -224,6 +178,8 @@ for (i in 1:length(levels(results_tbl$subject))) {
   
   results_tbl[(results_tbl$type == "ROVED" & results_tbl$subject == sub &results_tbl$condition == "Ear level"),]$slope = m.pend$coefficients[[2]]
   results_tbl[(results_tbl$type == "ROVED" & results_tbl$subject == sub &results_tbl$condition == "Floor level"),]$slope = m.pend$coefficients[[2]]+m.pend$coefficients[[4]]
+  results_tbl[(results_tbl$type == "ROVED" & results_tbl$subject == sub &results_tbl$condition == "Ear level"),]$intercepto = m.pend$coefficients[[1]]
+  results_tbl[(results_tbl$type == "ROVED" & results_tbl$subject == sub &results_tbl$condition == "Floor level"),]$intercepto = m.pend$coefficients[[1]]+m.pend$coefficients[[3]]
   
   
   cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
@@ -314,6 +270,38 @@ f3
 mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "3. Lm Slope", ".png", sep = '')
 ggsave(mi_nombre_de_archivo, plot=f3, width=15, height=10, units="cm", limitsize=FALSE, dpi=600)
 
+# Intercepto for condition
+
+f4 =  ggplot(results_tbl, aes(x = condition,y = intercepto, colour = condition, fill = condition)) +
+  geom_line(aes(group = subject), alpha = 0.3)+ 
+  geom_point(alpha = 1) +
+  scale_colour_manual(values = cbPalette) + 
+  scale_fill_manual(values = cbPalette) + 
+  geom_abline(slope = 0,
+              intercept = 0,
+              alpha = 0.5,
+              linetype = "dashed") +
+  stat_summary(fun.data = "mean_se",
+               geom = "pointrange",
+               alpha = 1,
+               size = 1,
+               # position = position_dodge(width = 1)
+               position = position_jitterdodge(jitter.width = 0.6,
+                                               jitter.height = 0,
+                                               dodge.width = 0 )) +
+  # stat_summary(fun.data = "mean_se",
+  #              geom = "linerange",
+  #              size=2,
+  #              position = position_dodge(width = 1)) +
+  labs(x = "Condition", 
+       y = "Intercepto with LM") +
+  facet_grid(. ~ type) +
+  theme_pubr(base_size = 12, margin = TRUE)+
+  theme(legend.position = "none")
+
+f4
+mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "4. Lm Intercepto", ".png", sep = '')
+ggsave(mi_nombre_de_archivo, plot=f4, width=15, height=10, units="cm", limitsize=FALSE, dpi=600)
 
 
 
@@ -322,6 +310,84 @@ ggsave(mi_nombre_de_archivo, plot=f3, width=15, height=10, units="cm", limitsize
 
 
 
+
+
+
+
+# Analysis Outliers ----
+
+# Slope
+
+tabla.ind.Eye <- results_tbl %>% 
+  filter(condition == "Ear level", type == "NORMAL") %>% 
+  group_by(subject,condition) %>%
+  summarise(mslope  = mean(slope,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Eye$mslope ,na.rm=TRUE)
+#plot_outliers_mad(res3,x=tabla.ind.Eye$mSesgoRel,pos_display=TRUE)
+tabla.ind.Eye[res3$outliers_pos,] 
+
+tabla.ind.Floor <- results_tbl %>% 
+  filter(condition == "Floor level", type == "NORMAL") %>% 
+  group_by(subject,condition) %>%
+  summarise(mslope  = mean(slope,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Floor$mslope ,na.rm=TRUE)
+#plot_outliers_mad(res3,x=tabla.ind.Floor$mSesgoRel,pos_display=TRUE)
+tabla.ind.Floor[res3$outliers_pos,] 
+
+# Intercepto
+
+tabla.ind.Eye <- results_tbl %>% 
+  filter(condition == "Ear level", type == "NORMAL") %>% 
+  group_by(subject,condition) %>%
+  summarise(minter  = mean(intercepto,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Eye$minter ,na.rm=TRUE)
+#plot_outliers_mad(res3,x=tabla.ind.Eye$mSesgoRel,pos_display=TRUE)
+tabla.ind.Eye[res3$outliers_pos,] 
+
+tabla.ind.Floor <- results_tbl %>% 
+  filter(condition == "Floor level", type == "NORMAL") %>% 
+  group_by(subject,condition) %>%
+  summarise(minter  = mean(intercepto,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Floor$minter ,na.rm=TRUE)
+#plot_outliers_mad(res3,x=tabla.ind.Floor$mSesgoRel,pos_display=TRUE)
+tabla.ind.Floor[res3$outliers_pos,] 
+
+
+
+
+
+
+
+# 1 - ABS bias
+
+tabla.ind.Eye <- results_tbl %>% 
+  filter(condition == "Ear level", type == "NORMAL") %>% 
+  group_by(subject,condition) %>%
+  summarise(mSesgoAbs  = mean(abs_bias,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Eye$mSesgoAbs ,na.rm=TRUE)
+#plot_outliers_mad(res3,x=tabla.ind.Eye$mSesgoAbs,pos_display=TRUE)
+tabla.ind.Eye[res3$outliers_pos,] 
+
+tabla.ind.Floor <- results_tbl %>% 
+  filter(condition == "Floor level", type == "NORMAL") %>% 
+  group_by(subject,condition) %>%
+  summarise(mSesgoAbs  = mean(abs_bias,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Floor$mSesgoAbs ,na.rm=TRUE)
+#plot_outliers_mad(res3,x=tabla.ind.Floor$mSesgoAbs,pos_display=TRUE)
+tabla.ind.Floor[res3$outliers_pos,]
+
+idx = results_tbl$subject == "S003"
+results_tbl = results_tbl[!idx,]
+idx = results_tbl$subject == "S012"
+results_tbl = results_tbl[!idx,]
+
+rm("res3", "tabla.ind.Floor", "tabla.ind.Eye", "tabla.raw")
 
 
 #Distance ------
@@ -811,7 +877,7 @@ tabla.ind.summ <- results_tbl %>%
             mSD = mean(perc_dist_sd))  %>%
   ungroup()
 
-tabla.ind.summ$SignedBias = tabla.ind.summ$mSesgoRel
+tabla.ind.summ$SignedBias = tabla.ind.summ$mslope
 
 # Signed Bias
 
