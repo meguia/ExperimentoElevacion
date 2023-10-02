@@ -238,31 +238,30 @@ ggsave(mi_nombre_de_archivo, plot=Figure2, width=50, height=50, units="cm", limi
 
 
 # Slope for condition
+results_tblp <- results_tbl %>% 
+  group_by(condition, type) %>%
+  summarise(mslope  = mean(slope,na.rm=TRUE),
+            SDslope  = sd(slope,na.rm=TRUE),
+            mintercepto  = mean(intercepto,na.rm=TRUE),
+            SDintercepto  = sd(intercepto,na.rm=TRUE),)  %>%
+  ungroup()
 
-f3 =  ggplot(results_tbl, aes(x = condition,y = slope, colour = condition, fill = condition)) +
-  geom_line(aes(group = subject), alpha = 0.3)+ 
-  geom_point(alpha = 1) +
+f3 =  ggplot(results_tblp, aes(x = condition,y = mslope, colour = condition, fill = condition)) +
+  geom_pointrange(aes(x=condition, y=mslope, ymin=mslope-SDslope, ymax=mslope+SDslope), shape=0, size = 1.2)+
+  geom_line(aes(group = type),size = 1.2)+
+  geom_point(data = results_tbl, mapping = aes(x = condition,y = slope, colour = condition, fill = condition), alpha = .8)+
+  geom_line(data = results_tbl, mapping = aes(x = condition,y = slope, group = subject, colour = condition, fill = condition),alpha = 0.3)+
   scale_colour_manual(values = cbPalette) + 
   scale_fill_manual(values = cbPalette) + 
   geom_abline(slope = 0,
               intercept = 0,
               alpha = 0.5,
               linetype = "dashed") +
-  stat_summary(fun.data = "mean_se",
-               geom = "pointrange",
-               alpha = 1,
-               size = 1,
-               # position = position_dodge(width = 1)
-               position = position_jitterdodge(jitter.width = 0.6,
-                                               jitter.height = 0,
-                                               dodge.width = 0 )) +
-  # stat_summary(fun.data = "mean_se",
-  #              geom = "linerange",
-  #              size=2,
-  #              position = position_dodge(width = 1)) +
   labs(x = "Condition", 
        y = "Slope with LM") +
   facet_grid(. ~ type) +
+  annotate("text", x = 1.5, y = 2,  label = "***", size = 4) +
+  annotate("segment", x = 1, xend = 2, y = 1.9, yend = 1.9, colour = "black", size=.5, alpha=1,)+
   theme_pubr(base_size = 12, margin = TRUE)+
   theme(legend.position = "none")
 
@@ -270,25 +269,34 @@ f3
 mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "3. Lm Slope", ".png", sep = '')
 ggsave(mi_nombre_de_archivo, plot=f3, width=15, height=10, units="cm", limitsize=FALSE, dpi=600)
 
+t.test(filter(results_tbl, 
+              condition=="Ear level" & type=="NORMAL")$slope,
+       filter(results_tbl, 
+              condition=="Floor level" & type=="NORMAL")$slope, 
+       paired = TRUE)
+
+
 # Intercepto for condition
 
-f4 =  ggplot(results_tbl, aes(x = condition,y = intercepto, colour = condition, fill = condition)) +
-  geom_line(aes(group = subject), alpha = 0.3)+ 
-  geom_point(alpha = 1) +
+f4 =  ggplot(results_tblp, aes(x = condition,y = mintercepto, colour = condition, fill = condition)) +
+  geom_pointrange(aes(x=condition, y=mintercepto, ymin=mintercepto-SDintercepto, ymax=mintercepto+SDintercepto), shape=0, size = 1.2)+
+  geom_line(aes(group = type),size = 1.2)+
+  geom_point(data = results_tbl, mapping = aes(x = condition,y = intercepto, colour = condition, fill = condition), alpha = .8)+
+  geom_line(data = results_tbl, mapping = aes(x = condition,y = intercepto, group = subject, colour = condition, fill = condition),alpha = 0.3)+
   scale_colour_manual(values = cbPalette) + 
   scale_fill_manual(values = cbPalette) + 
   geom_abline(slope = 0,
               intercept = 0,
               alpha = 0.5,
               linetype = "dashed") +
-  stat_summary(fun.data = "mean_se",
-               geom = "pointrange",
-               alpha = 1,
-               size = 1,
-               # position = position_dodge(width = 1)
-               position = position_jitterdodge(jitter.width = 0.6,
-                                               jitter.height = 0,
-                                               dodge.width = 0 )) +
+  # stat_summary(fun.data = "mean_se",
+  #              geom = "pointrange",
+  #              alpha = 1,
+  #              size = 1,
+  #              # position = position_dodge(width = 1)
+  #              position = position_jitterdodge(jitter.width = 0.6,
+  #                                              jitter.height = 0,
+  #                                              dodge.width = 0 )) +
   # stat_summary(fun.data = "mean_se",
   #              geom = "linerange",
   #              size=2,
@@ -296,6 +304,8 @@ f4 =  ggplot(results_tbl, aes(x = condition,y = intercepto, colour = condition, 
   labs(x = "Condition", 
        y = "Intercepto with LM") +
   facet_grid(. ~ type) +
+  annotate("text", x = 1.5, y = 8,  label = "***", size = 4) +
+  annotate("segment", x = 1, xend = 2, y = 7.9, yend = 7.9, colour = "black", size=.5, alpha=1,)+
   theme_pubr(base_size = 12, margin = TRUE)+
   theme(legend.position = "none")
 
@@ -304,11 +314,47 @@ mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "4. Lm Intercep
 ggsave(mi_nombre_de_archivo, plot=f4, width=15, height=10, units="cm", limitsize=FALSE, dpi=600)
 
 
+t.test(filter(results_tbl, 
+              condition=="Ear level" & type=="ROVED")$slope,
+       filter(results_tbl, 
+              condition=="Floor level" & type=="ROVED")$slope, 
+       paired = TRUE)
 
 
+# Analysis Range
+results_tblrange <- results_tbl %>% 
+  group_by(subject,condition, type) %>%
+  summarise(range  = results_tbl[results_tbl$target_distance == 6,]$percived_distance-results_tbl[results_tbl$target_distance == 2,]$percived_distance)  %>%
+  ungroup()
 
+f5 =  ggplot(results_tblp, aes(x = condition,y = mslope, colour = condition, fill = condition)) +
+  geom_pointrange(aes(x=condition, y=mslope, ymin=mslope-SDslope, ymax=mslope+SDslope), shape=0, size = 1.2)+
+  geom_line(aes(group = type),size = 1.2)+
+  geom_point(data = results_tbl, mapping = aes(x = condition,y = slope, colour = condition, fill = condition), alpha = .8)+
+  geom_line(data = results_tbl, mapping = aes(x = condition,y = slope, group = subject, colour = condition, fill = condition),alpha = 0.3)+
+  scale_colour_manual(values = cbPalette) + 
+  scale_fill_manual(values = cbPalette) + 
+  geom_abline(slope = 0,
+              intercept = 0,
+              alpha = 0.5,
+              linetype = "dashed") +
+  labs(x = "Condition", 
+       y = "Slope with LM") +
+  facet_grid(. ~ type) +
+  annotate("text", x = 1.5, y = 2,  label = "***", size = 4) +
+  annotate("segment", x = 1, xend = 2, y = 1.9, yend = 1.9, colour = "black", size=.5, alpha=1,)+
+  theme_pubr(base_size = 12, margin = TRUE)+
+  theme(legend.position = "none")
 
+f5
+mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "3. Lm Slope", ".png", sep = '')
+ggsave(mi_nombre_de_archivo, plot=f3, width=15, height=10, units="cm", limitsize=FALSE, dpi=600)
 
+t.test(filter(results_tbl, 
+              condition=="Ear level" & type=="NORMAL")$slope,
+       filter(results_tbl, 
+              condition=="Floor level" & type=="NORMAL")$slope, 
+       paired = TRUE)
 
 
 
