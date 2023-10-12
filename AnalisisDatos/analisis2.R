@@ -17,7 +17,6 @@ figures_folder = "figuras"
 tabla.raw <- read.csv("./DatosUnificados/datacrudafinal2.csv", header = TRUE, sep = ';', stringsAsFactors = TRUE)
 tabla.raw$abs_bias <-  tabla.raw$percived_distance - tabla.raw$target_distance
 tabla.raw$rel_bias <- (tabla.raw$percived_distance - tabla.raw$target_distance) / tabla.raw$target_distance
-tabla.raw$rel_bias_abs <- abs((tabla.raw$percived_distance - tabla.raw$target_distance) / tabla.raw$target_distance)
 idx = tabla.raw$subject == "13" | tabla.raw$percived_distance == 0.05
 tabla.raw[idx,]$percived_distance = 0.5
 
@@ -28,7 +27,7 @@ f_promedio <- function(x) c(mean = mean(x),
                             sem  = sd(x)/sqrt(length(x)),
                             n    = length(x))
 
-results_tbl <- tibble(aggregate(cbind(percived_distance,rel_bias,abs_bias,rel_bias_abs) ~ subject*block*condition*target_distance*type,
+results_tbl <- tibble(aggregate(cbind(percived_distance,rel_bias,abs_bias) ~ subject*block*condition*target_distance*type,
                               data = tabla.raw,
                               FUN  = f_promedio,na.action = NULL))
 
@@ -88,7 +87,6 @@ results_tbl %>%
          rel_bias_signed_var = rel_bias[,"var"],
          rel_bias_signed_n = rel_bias[,"n"],
          rel_bias_signed = rel_bias[,"mean"],
-         rel_bias_signed_abs = rel_bias_abs[,"mean"],
          abs_bias_sd = abs_bias[,"sd"],
          abs_bias_sem = abs_bias[,"sem"],
          abs_bias_var = abs_bias[,"var"],
@@ -97,39 +95,12 @@ results_tbl %>%
   write_csv("./DatosUnificados/results.csv")
 
 results_tbl <- read.csv("./DatosUnificados/results.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
-results_tbl$rel_bias_abs = abs(results_tbl$rel_bias) 
-
-# Analysis outliers with bias
-tabla.ind.Eye <- results_tbl %>% 
-  filter(condition == "Ear level", type == "NORMAL") %>% 
-  group_by(subject,condition) %>%
-  summarise(mSesgoAbs  = mean(rel_bias_abs,na.rm=TRUE))  %>%
-  ungroup()
-res3 <- outliers_mad(x = tabla.ind.Eye$mSesgoAbs ,na.rm=TRUE)
-plot_outliers_mad(res3,x=tabla.ind.Eye$mSesgoAbs,pos_display=TRUE)
-tabla.ind.Eye[res3$outliers_pos,] 
-
-tabla.ind.Floor <- results_tbl %>% 
-  filter(condition == "Floor level", type == "NORMAL") %>% 
-  group_by(subject,condition) %>%
-  summarise(mSesgoAbs  = mean(rel_bias_abs,na.rm=TRUE))  %>%
-  ungroup()
-res3 <- outliers_mad(x = tabla.ind.Floor$mSesgoAbs ,na.rm=TRUE)
-plot_outliers_mad(res3,x=tabla.ind.Floor$mSesgoAbs,pos_display=TRUE)
-tabla.ind.Floor[res3$outliers_pos,]
-
-idx = results_tbl$subject == "S001"
-results_tbl = results_tbl[!idx,]
-rm("res3", "tabla.ind.Floor", "tabla.ind.Eye", "tabla.raw")
-
-
-
 
 ### Analysis Slopes -----
 results_tbl$slope = 0
 results_tbl$intercepto = 0
 fig_normal = list()
-for (i in 2:length(levels(results_tbl$subject))) {
+for (i in 1:length(levels(results_tbl$subject))) {
   print(i)
   sub = levels(results_tbl$subject)[i]
   print(sub)
@@ -198,7 +169,7 @@ ggsave(mi_nombre_de_archivo, plot=Figure1, width=50, height=50, units="cm", limi
 
 # Figure lm for ROVED
 fig_roved = list()
-for (i in 2:length(levels(results_tbl$subject))) {
+for (i in 1:length(levels(results_tbl$subject))) {
   print(i)
   sub = levels(results_tbl$subject)[i]
   print(sub)
@@ -304,20 +275,6 @@ t.test(filter(results_tbl,
               condition=="Floor level" & type=="NORMAL")$slope, 
        paired = TRUE)
 
-#Analysis slop NORMAL vs ROVED
-
-t.test(filter(results_tbl, 
-              condition=="Floor level" & type=="NORMAL")$slope,
-       filter(results_tbl, 
-              condition=="Floor level" & type=="ROVED")$slope, 
-       paired = TRUE)
-
-
-t.test(filter(results_tbl, 
-              condition=="Ear level" & type=="NORMAL")$slope,
-       filter(results_tbl, 
-              condition=="Floor level" & type=="ROVED")$slope, 
-       paired = TRUE)
 
 # Intercepto for condition
 
@@ -365,32 +322,16 @@ t.test(filter(results_tbl,
 
 
 # Analysis Range
-results_tblrange2 <- filter(results_tbl, target_distance == 2) %>% 
-  group_by(subject,condition, type, target_distance) %>%
-  summarise(percived_distance_2 = percived_distance)%>%
-  ungroup()
-results_tblrange6 <- filter(results_tbl, target_distance == 6) %>% 
-  group_by(subject,condition, type, target_distance) %>%
-  summarise(percived_distance_6 = percived_distance)%>%
+results_tblrange <- results_tbl %>% 
+  group_by(subject,condition, type) %>%
+  summarise(range  = results_tbl[results_tbl$target_distance == 6,]$percived_distance-results_tbl[results_tbl$target_distance == 2,]$percived_distance)  %>%
   ungroup()
 
-results_tblrange = results_tblrange2
-results_tblrange$percived_distance_6 = results_tblrange6$percived_distance_6
-results_tblrange$range = results_tblrange$percived_distance_6 - results_tblrange$percived_distance_2
-
-results_tblrangeP <- results_tblrange %>% 
-  group_by(condition, type) %>%
-  summarise(mrange = mean(range),
-            sdrange = sd(range))%>%
-  ungroup()
-
-rm("results_tblrange2", "results_tblrange6")
-
-f5 =  ggplot(results_tblrangeP, aes(x = condition,y = mrange, colour = condition, fill = condition)) +
-  geom_pointrange(aes(x=condition, y=mrange, ymin=mrange-sdrange, ymax=mrange+sdrange), shape=0, size = 1.2)+
+f5 =  ggplot(results_tblp, aes(x = condition,y = mslope, colour = condition, fill = condition)) +
+  geom_pointrange(aes(x=condition, y=mslope, ymin=mslope-SDslope, ymax=mslope+SDslope), shape=0, size = 1.2)+
   geom_line(aes(group = type),size = 1.2)+
-  geom_point(data = results_tblrange, mapping = aes(x = condition,y = range, colour = condition, fill = condition), alpha = .8)+
-  geom_line(data = results_tblrange, mapping = aes(x = condition,y = range, group = subject, colour = condition, fill = condition),alpha = 0.3)+
+  geom_point(data = results_tbl, mapping = aes(x = condition,y = slope, colour = condition, fill = condition), alpha = .8)+
+  geom_line(data = results_tbl, mapping = aes(x = condition,y = slope, group = subject, colour = condition, fill = condition),alpha = 0.3)+
   scale_colour_manual(values = cbPalette) + 
   scale_fill_manual(values = cbPalette) + 
   geom_abline(slope = 0,
@@ -398,29 +339,25 @@ f5 =  ggplot(results_tblrangeP, aes(x = condition,y = mrange, colour = condition
               alpha = 0.5,
               linetype = "dashed") +
   labs(x = "Condition", 
-       y = "Range [m]") +
+       y = "Slope with LM") +
   facet_grid(. ~ type) +
-  annotate("text", x = 1.5, y = 6.7,  label = "***", size = 4) +
-  annotate("segment", x = 1, xend = 2, y = 6.6, yend = 6.6, colour = "black", size=.5, alpha=1,)+
+  annotate("text", x = 1.5, y = 2,  label = "***", size = 4) +
+  annotate("segment", x = 1, xend = 2, y = 1.9, yend = 1.9, colour = "black", size=.5, alpha=1,)+
   theme_pubr(base_size = 12, margin = TRUE)+
   theme(legend.position = "none")
 
 f5
-mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "5. Range", ".png", sep = '')
-ggsave(mi_nombre_de_archivo, plot=f5, width=15, height=10, units="cm", limitsize=FALSE, dpi=600)
+mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "3. Lm Slope", ".png", sep = '')
+ggsave(mi_nombre_de_archivo, plot=f3, width=15, height=10, units="cm", limitsize=FALSE, dpi=600)
 
-t.test(filter(results_tblrange, 
-              condition=="Ear level" & type=="NORMAL")$range,
-       filter(results_tblrange, 
-              condition=="Floor level" & type=="NORMAL")$range, 
-       paired = TRUE)
-t.test(filter(results_tblrange, 
-              condition=="Ear level" & type=="ROVED")$range,
-       filter(results_tblrange, 
-              condition=="Floor level" & type=="ROVED")$range, 
+t.test(filter(results_tbl, 
+              condition=="Ear level" & type=="NORMAL")$slope,
+       filter(results_tbl, 
+              condition=="Floor level" & type=="NORMAL")$slope, 
        paired = TRUE)
 
-#---------------------------------------
+
+
 
 
 # Analysis Outliers ----
@@ -476,23 +413,26 @@ tabla.ind.Floor[res3$outliers_pos,]
 tabla.ind.Eye <- results_tbl %>% 
   filter(condition == "Ear level", type == "NORMAL") %>% 
   group_by(subject,condition) %>%
-  summarise(mSesgoAbs  = mean(rel_bias_abs,na.rm=TRUE))  %>%
+  summarise(mSesgoAbs  = mean(abs_bias,na.rm=TRUE))  %>%
   ungroup()
 res3 <- outliers_mad(x = tabla.ind.Eye$mSesgoAbs ,na.rm=TRUE)
-plot_outliers_mad(res3,x=tabla.ind.Eye$mSesgoAbs,pos_display=TRUE)
+#plot_outliers_mad(res3,x=tabla.ind.Eye$mSesgoAbs,pos_display=TRUE)
 tabla.ind.Eye[res3$outliers_pos,] 
 
 tabla.ind.Floor <- results_tbl %>% 
   filter(condition == "Floor level", type == "NORMAL") %>% 
   group_by(subject,condition) %>%
-  summarise(mSesgoAbs  = mean(rel_bias_abs,na.rm=TRUE))  %>%
+  summarise(mSesgoAbs  = mean(abs_bias,na.rm=TRUE))  %>%
   ungroup()
 res3 <- outliers_mad(x = tabla.ind.Floor$mSesgoAbs ,na.rm=TRUE)
-plot_outliers_mad(res3,x=tabla.ind.Floor$mSesgoAbs,pos_display=TRUE)
+#plot_outliers_mad(res3,x=tabla.ind.Floor$mSesgoAbs,pos_display=TRUE)
 tabla.ind.Floor[res3$outliers_pos,]
 
-idx = results_tbl$subject == "S001"
+idx = results_tbl$subject == "S003"
 results_tbl = results_tbl[!idx,]
+idx = results_tbl$subject == "S012"
+results_tbl = results_tbl[!idx,]
+
 rm("res3", "tabla.ind.Floor", "tabla.ind.Eye", "tabla.raw")
 
 
@@ -524,8 +464,7 @@ results_tbl$Predsubject.lin = fitted(m.Dist.lin, level=1)
 
 
 tabla.pob = filter(results_tbl,type == "NORMAL") %>% group_by(target_distance,condition) %>%
-  summarise(Mperc_dist  = mean(percived_distance),
-            SDperc_dist = sd(percived_distance))  %>%
+  summarise(Mperc_dist  = mean(percived_distance))  %>%
   ungroup()
 tabla.pob$PredPob.lin = 0
 idx = tabla.pob$condition == "Ear level"
@@ -586,18 +525,12 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition
   # Poblacional
   
   #por sujeto
-  f1.p <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition, color  = condition)) + 
+  f1.p <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition, color  = condition)) + 
     geom_line(size = 1)+
     # geom_line(data = results_tbl, aes(x=target_distance, y = PredPob.lin, color = condition), size = 1.5) +
     geom_abline(intercept = 0, slope = 1, linetype=2) +
-    geom_pointrange(aes(x=target_distance, y=Mperc_dist, ymin=Mperc_dist-SDperc_dist, ymax=Mperc_dist+SDperc_dist), size = 1.2,
-                    position = position_jitterdodge(jitter.width = .1,
-                                                    jitter.height = 0,
-                                                    dodge.width = .2 ))+
-   
-    
-     # geom_pointrange(aes(x = target_distance, y = Mperc_dist),
-    #            alpha = 1)+
+    geom_point(aes(x = target_distance, y = Mperc_dist),
+               alpha = 1)+
     scale_colour_manual(values = cbPalette) + 
     scale_fill_manual(values = cbPalette) + 
     
@@ -611,7 +544,7 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =PredPob.lin, group = condition
           legend.title = element_blank())
   
   f1.p
-  mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "6.Lineal-Normal.pob", ".png", sep = '')
+  mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "Lineal-Normal.pob", ".png", sep = '')
   ggsave(mi_nombre_de_archivo, plot=f1.p, width=10, height=10, units="cm", limitsize=FALSE, dpi=600)
   
   
@@ -853,11 +786,9 @@ tabla.pob.slope <- results_tbl %>%
 ## Bias signed-----
 f2 <- filter(results_tbl,type == "NORMAL") %>% 
   group_by(subject,condition) %>%
-  summarise(mSesgoRel  = mean(rel_bias),
-            mSesgoAbs  = mean(abs_bias)) %>%
+  summarise(mSesgoRel  = mean(rel_bias)) %>%
   ungroup() %>%
   ggplot(aes(x = condition,y = 100*mSesgoRel,colour = condition, fill = condition)) +
-    geom_line(aes(group = subject))+
   geom_point(alpha = 0.4, 
              position = position_jitterdodge(jitter.width = .3,
                                              jitter.height = 0,
@@ -882,58 +813,6 @@ f2 <- filter(results_tbl,type == "NORMAL") %>%
   theme(legend.position = "none")
 
 f2
-mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "BIAS", ".png", sep = '')
-ggsave(mi_nombre_de_archivo, plot=f2, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
-
-
-f2.2 <- filter(results_tbl,type == "NORMAL") %>% 
-  group_by(subject,condition) %>%
-  summarise(mSesgoRel  = mean(rel_bias),
-            mSesgoAbs  = mean(rel_bias_abs)) %>%
-  ungroup() %>%
-  ggplot(aes(x = condition,y = 100*mSesgoAbs,colour = condition, fill = condition)) +
-  geom_line(aes(group = subject))+
-  geom_point(alpha = 0.4, 
-             position = position_jitterdodge(jitter.width = .3,
-                                             jitter.height = 0,
-                                             dodge.width = 1 )) +
-  scale_colour_manual(values = cbPalette) + 
-  scale_fill_manual(values = cbPalette) + 
-  geom_abline(slope = 0, 
-              intercept = 0, 
-              alpha = 0.5, 
-              linetype = "dashed") +
-  stat_summary(fun.data = "mean_se", 
-               geom = "bar", 
-               alpha = .4, 
-               position = position_dodge(width = 1)) +
-  stat_summary(fun.data = "mean_se", 
-               geom = "linerange",  
-               size=2, 
-               position = position_dodge(width = 1)) + 
-  labs(x = "Condition", 
-       y = "Relative signed \nbias [%]") +
-  theme_pubr(base_size = 12, margin = TRUE)+
-  theme(legend.position = "none")
-
-f2.2
-mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "BIAS_abs", ".png", sep = '')
-ggsave(mi_nombre_de_archivo, plot=f2.2, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
-
-
-table_bias_abs <- filter(results_tbl,type == "NORMAL") %>% 
-  group_by(subject,condition) %>%
-  summarise(mSesgoRel  = mean(rel_bias),
-            mSesgoAbs  = mean(rel_bias_abs)) %>%
-  ungroup()
-t.test(filter(table_bias_abs, 
-              condition=="Ear level")$mSesgoAbs,
-       filter(table_bias_abs, 
-              condition=="Floor level")$mSesgoAbs, 
-       paired = TRUE)
-
-
-
 aaa <- filter(results_tbl,type == "NORMAL") %>% 
   group_by(subject,condition) %>%
   summarise(mSesgoRel  = mean(rel_bias)) %>%
@@ -947,8 +826,8 @@ anova(m.RelativBias)
 ## Intra-subject
 tabla.ind.var <- filter(results_tbl) %>% 
   group_by(target_distance,condition,type) %>%
-  summarise(mSD = mean(perc_dist_sd/target_distance),
-            SdSd = sd(perc_dist_sd/target_distance),
+  summarise(mSD = mean(perc_dist_sd),
+            SdSd = sd(perc_dist_sd),
             n = n())  %>%
   ungroup()
 
@@ -970,9 +849,6 @@ f3 <- ggplot(tabla.ind.var, aes(x=target_distance, y =mSD, group = condition, co
         legend.title = element_blank())
 
 f3
-mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "VariabilitiINDIDISTANCE", ".png", sep = '')
-ggsave(mi_nombre_de_archivo, plot=f3, width=15, height=10, units="cm", limitsize=FALSE, dpi=600)
-
 
 tabla.ind.var <- filter(results_tbl,type == "ROVED") %>% 
   group_by(target_distance,condition) %>%
@@ -999,11 +875,11 @@ f31 <- ggplot(tabla.ind.var, aes(x=target_distance, y =mSD, group = condition, c
 
 f31
 ## Intra-Sujeto colapsado
-f4 <- results_tbl %>% 
-  group_by(subject,condition,type) %>%
+f4 <- filter(results_tbl,type == "NORMAL") %>% 
+  group_by(subject,condition) %>%
   summarise(mDist_perc = mean(percived_distance),
             mSesgoRel  = mean(rel_bias),
-            mSD = mean(perc_dist_sd/target_distance))  %>%
+            mSD = mean(perc_dist_sd))  %>%
   ungroup() %>%
   ggplot(aes(x = condition,y = 100*mSD, colour = condition, fill = condition)) +
   geom_point(alpha = 0.4, 
@@ -1024,36 +900,12 @@ f4 <- results_tbl %>%
                geom = "linerange",  
                size=2, 
                position = position_dodge(width = 1)) + 
-  facet_grid(.~ type )+
   labs(x = "Condition", 
        y = "Collapsed standard\ndeviation [%] Intra-subject") +
   theme_pubr(base_size = 12, margin = TRUE)+
   theme(legend.position = "none")
 
 f4
-mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "VariabilitiColapsaado", ".png", sep = '')
-ggsave(mi_nombre_de_archivo, plot=f4, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
-
-tablaV <- results_tbl %>% 
-  group_by(subject,condition,type) %>%
-  summarise(mDist_perc = mean(percived_distance),
-            mSesgoRel  = mean(rel_bias),
-            mSD = mean(perc_dist_sd/target_distance))  %>%
-  ungroup()
-
-t.test(filter(tablaV, 
-              condition=="Ear level" & type=="NORMAL")$mSD,
-       filter(tablaV, 
-              condition=="Floor level" & type=="NORMAL")$mSD, 
-       paired = TRUE)
-
-t.test(filter(tablaV, 
-              condition=="Ear level" & type=="ROVED")$mSD,
-       filter(tablaV, 
-              condition=="Floor level" & type=="ROVED")$mSD, 
-       paired = TRUE)
-
-
 # Unifico graficos en una sola figura
 Figure2 = ggarrange(f1,f2,f3,f4,
                     labels = c("a", "b","c","d"),
