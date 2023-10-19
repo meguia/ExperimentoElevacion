@@ -45,14 +45,14 @@ tabla.ind.Eye <- results_tbl %>%
   group_by(subject,condition) %>%
   summarise(mBiasUnsigned  = mean(rel_bias_unsigned ,na.rm=TRUE))  %>%
   ungroup()
-res3 <- outliers_mad(x = tabla.ind.Eye$mBiasUnsigned ,na.rm=TRUE)
+res3 <- outliers_mad(x = tabla.ind.Eye$mBiasUnsigned,threshold = 3 ,na.rm=TRUE)
 plot_outliers_mad(res3,x=tabla.ind.Eye$mBiasUnsigned,pos_display=TRUE)
 tabla.ind.Eye[res3$outliers_pos,] 
 
 tabla.ind.Floor <- results_tbl %>% 
   filter(condition == "Floor level", type == "NORMAL") %>% 
   group_by(subject,condition) %>%
-  summarise(mBiasUnsigned  = mean(rel_bias_unsigned ,na.rm=TRUE))  %>%
+  summarise(mBiasUnsigned  = mean(rel_bias_unsigned,threshold = 3 ,na.rm=TRUE))  %>%
   ungroup()
 res3 <- outliers_mad(x = tabla.ind.Floor$mBiasUnsigned ,na.rm=TRUE)
 plot_outliers_mad(res3,x=tabla.ind.Floor$mBiasUnsigned,pos_display=TRUE)
@@ -63,6 +63,33 @@ results_tbl = results_tbl[!idx,]
 idx = results_tbl$subject == "S003"
 results_tbl = results_tbl[!idx,]
 
+# idx = results_tbl$subject == "S001" & results_tbl$condition == "Floor level" & results_tbl$type == "ROVED"
+# results_tbl = results_tbl[!idx,]
+# idx = results_tbl$subject == "S003" & results_tbl$condition == "Floor level" & results_tbl$type == "ROVED"
+# results_tbl = results_tbl[!idx,]
+
+
+
 rm("res3", "tabla.ind.Floor", "tabla.ind.Eye")
 
 write_csv(results_tbl, "./DatosUnificados/Dresults_without_outliers.csv")
+
+
+# tabla.ind.Eye <- results_tbl %>% 
+#   filter(condition == "Ear level", type == "ROVED") %>% 
+#   group_by(subject,condition) %>%
+#   summarise(mBiasUnsigned  = mean(rel_bias_unsigned ,na.rm=TRUE))  %>%
+#   ungroup()
+# res3 <- outliers_mad(x = tabla.ind.Eye$mBiasUnsigned ,na.rm=TRUE)
+# plot_outliers_mad(res3,x=tabla.ind.Eye$mBiasUnsigned,pos_display=TRUE)
+# tabla.ind.Eye[res3$outliers_pos,] 
+# 
+# 
+# tabla.ind.Floor <- results_tbl %>% 
+#   filter(condition == "Floor level", type == "ROVED") %>% 
+#   group_by(subject,condition) %>%
+#   summarise(mBiasUnsigned  = mean(rel_bias_unsigned ,na.rm=TRUE))  %>%
+#   ungroup()
+# res3 <- outliers_mad(x = tabla.ind.Floor$mBiasUnsigned ,na.rm=TRUE)
+# plot_outliers_mad(res3,x=tabla.ind.Floor$mBiasUnsigned,pos_display=TRUE)
+# tabla.ind.Floor[res3$outliers_pos,]
