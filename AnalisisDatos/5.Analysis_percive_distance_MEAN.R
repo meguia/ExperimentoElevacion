@@ -77,7 +77,7 @@ extract_stats(ggcoefstats(m.Dist1))
 anova(m.Dist1)
 
 
-eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
+eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)+italic((b)),
                   list(a = round(m.Dist1$coefficients$fixed[[2]],digits = 2),
                        b = round(m.Dist1$coefficients$fixed[[1]], digits = 2)))
 eq2 <- substitute("Floor level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
