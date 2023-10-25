@@ -121,17 +121,27 @@ t.test(filter(results_tbl,
 
 
 # Analysis Range
+
+a = results_tbl[results_tbl$target_distance == 6,]
+b = results_tbl[results_tbl$target_distance == 2,]
+
 results_tblrange <- results_tbl %>% 
   group_by(subject,condition, type) %>%
-  summarise(range  = results_tbl[results_tbl$target_distance == 6,]$percived_distance-results_tbl[results_tbl$target_distance == 2,]$percived_distance)  %>%
+  summarise(range  = results_tbl[results_tbl$target_distance == 6,]$perc_dist-results_tbl[results_tbl$target_distance == 2,]$perc_dist)  %>%
+  ungroup()
+
+results_tblp <- results_tblrange %>% 
+  group_by(condition, type) %>%
+  summarise(mslope  = mean(range,na.rm=TRUE),
+            SDslope  = sd(range,na.rm=TRUE)/sqrt(length(range)))  %>%
   ungroup()
 
 f5 =  ggplot(results_tblp, aes(x = condition,y = mslope, colour = condition, fill = condition)) +
   geom_pointrange(aes(x=condition, y=mslope, ymin=mslope-SDslope, ymax=mslope+SDslope),
-                  position = position_dodgenudge(direction = "split", width = 3), size = 1.2, alpha=.5)+
+                  position = position_dodgenudge(direction = "split", width = 3), size = 1.2, alpha=.5,shape = 0)+
   geom_line(aes(group = type),position = position_dodgenudge(direction = "split", width = 3),size = 1.2)+
-  geom_point(data = results_tbl, mapping = aes(x = condition,y = slope, colour = condition, fill = condition), alpha = .8)+
-  geom_line(data = results_tbl, mapping = aes(x = condition,y = slope, group = subject, colour = condition, fill = condition),alpha = 0.3)+
+  geom_point(data = results_tblrange, mapping = aes(x = condition,y = range, colour = condition, fill = condition), alpha = .8)+
+  geom_line(data = results_tblrange, mapping = aes(x = condition,y = range, group = subject, colour = condition, fill = condition),alpha = 0.3)+
   scale_colour_manual(values = cbPalette) + 
   scale_fill_manual(values = cbPalette) + 
   geom_abline(slope = 0,

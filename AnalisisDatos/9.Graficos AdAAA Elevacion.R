@@ -194,6 +194,17 @@ m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance
                 method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
                 data = filter(results_tbl,type == "ROVED"))
 
+
+eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
+                  list(a = round(m.Dist1$coefficients$fixed[[2]],digits = 2),
+                       b = round(m.Dist1$coefficients$fixed[[1]], digits = 2)))
+eq2 <- substitute("Floor level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
+                  list(a = round(m.Dist1$coefficients$fixed[[2]]+m.Dist1$coefficients$fixed[[4]], digits = 2),
+                       b = round(m.Dist1$coefficients$fixed[[1]]+m.Dist1$coefficients$fixed[[3]], digits = 2)))
+eq3 <- substitute("r.squared:"~~~italic(R)^italic(2) == italic(b), 
+                  list(b = round(r.squaredGLMM(m.Dist1)[2], digits = 2)))
+
+
 tabla.pob = filter(results_tbl,type == "ROVED") %>% group_by(target_distance,condition) %>%
   summarise(Mperc_dist  = mean(perc_dist),
             SDperc_dist = sd(perc_dist)/sqrt(n()))  %>%
