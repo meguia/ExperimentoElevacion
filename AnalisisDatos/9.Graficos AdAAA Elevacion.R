@@ -6,7 +6,7 @@ library(MuMIn)
 library(ggstatsplot)
 library(ggpubr)
 library(ggpp)
-
+library(PupillometryR)
 
 rm(list=ls())
 figures_folder = "figuras"
@@ -77,7 +77,12 @@ f2 =  ggplot(results_tblp, aes(x = condition,y = mslope,colour = condition)) +
   geom_line(position = position_dodgenudge(direction = "split", width = 3),size = 1.2, alpha=.5)+
   geom_line(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = condition,y = slope, group = subject, colour = condition, fill = condition),alpha = 0.6)+
   geom_point(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = condition,y = slope, colour = condition, fill = condition), size = 2.4,alpha = 1)+
-  
+  geom_violin(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = condition,y = slope, colour = condition, fill = condition),
+                   position = position_nudge_center(x = .3,
+                     y = 0,
+                     center_x = 2,
+                     direction = "split",
+                     kept.origin = c("original", "none")),trim = FALSE, alpha = .2)+
   scale_colour_manual(values = cbPalette) + 
   scale_fill_manual(values = cbPalette) + 
   geom_abline(slope = 0,
@@ -116,7 +121,13 @@ f3 =  ggplot(results_tblp, aes(x = condition,y = MBiasSigned, colour = condition
   geom_line(position = position_dodgenudge(direction = "split", width = 3),size = 1.2, alpha=.5)+
   geom_line(data = results_tbls, mapping = aes(x = condition,y = mBiasSigned, group = subject, colour = condition, fill = condition),alpha = 0.6)+
   geom_point(data = results_tbls, mapping = aes(x = condition,y = mBiasSigned, colour = condition, fill = condition), size = 2.4, alpha = 1)+
-
+  geom_violin(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = condition,y = slope, colour = condition, fill = condition),
+              position = position_nudge_center(x = .3,
+                                               y = 0,
+                                               center_x = 2,
+                                               center_y = -10,
+                                               direction = "split",
+                                               kept.origin = c("original", "none")),trim = FALSE, alpha = .2)+
   scale_colour_manual(values = cbPalette) + 
   scale_fill_manual(values = cbPalette) + 
   geom_abline(slope = 0,
@@ -139,7 +150,12 @@ f4 =  ggplot(results_tblp, aes(x = condition,y = MBiasUnSigned, colour = conditi
   geom_line(position = position_dodgenudge(direction = "split", width = 3),size = 1.2, alpha=.5)+
   geom_line(data = results_tbls, mapping = aes(x = condition,y = mBiasUnSigned, group = subject, colour = condition, fill = condition),alpha = 0.6)+
   geom_point(data = results_tbls, mapping = aes(x = condition,y = mBiasUnSigned, colour = condition, fill = condition), size = 2.4, alpha = 1)+
- 
+  geom_violin(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = condition,y = slope, colour = condition, fill = condition),
+              position = position_nudge_center(x = .3,
+                                               y = 0,
+                                               center_x = 2,
+                                               direction = "split",
+                                               kept.origin = c("original", "none")),trim = FALSE, alpha = .2)+
   scale_colour_manual(values = cbPalette) + 
   scale_fill_manual(values = cbPalette) + 
   # geom_abline(slope = 0,
