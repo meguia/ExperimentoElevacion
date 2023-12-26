@@ -54,9 +54,9 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition,
   geom_text(x = 1.1, y = 6.6, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 3.5, color = "#000000")+
   geom_text(x = 1.1, y = 6.1, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 3.5, color = "#E69F00")+
   #geom_text(x = 0.2, y = 6, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#009E73")+
-  scale_x_continuous(name="Distancia de la fuente (m)", limits = c(1,7)) +
-  scale_y_continuous(name="Distancia percibida (m)",   limits = c(1,7)) +
-  ggtitle("Experimento 1")+
+  scale_x_continuous(name="Source distance (m)", limits = c(1,7)) +
+  scale_y_continuous(name="Percived distance (m)",   limits = c(1,7)) +
+  ggtitle("Experiment 1")+
   theme_pubr(base_size = 12, margin = TRUE)+
   theme(legend.position = "top",
         legend.title = element_blank())
@@ -77,20 +77,20 @@ f2 =  ggplot(results_tblp, aes(x = condition,y = mslope,colour = condition)) +
   geom_line(position = position_dodgenudge(direction = "split", width = 3),size = 1.2, alpha=.5)+
   geom_line(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = condition,y = slope, group = subject, colour = condition, fill = condition),alpha = 0.6)+
   geom_point(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = condition,y = slope, colour = condition, fill = condition), size = 2.4,alpha = 1)+
-  geom_violin(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = condition,y = slope, colour = condition, fill = condition),
-                   position = position_nudge_center(x = .3,
-                     y = 0,
-                     center_x = 2,
-                     direction = "split",
-                     kept.origin = c("original", "none")),trim = FALSE, alpha = .2)+
+  # geom_violin(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = condition,y = slope, colour = condition, fill = condition),
+  #                  position = position_nudge_center(x = .3,
+  #                    y = 0,
+  #                    center_x = 2,
+  #                    direction = "split",
+  #                    kept.origin = c("original", "none")),trim = FALSE, alpha = .2)+
   scale_colour_manual(values = cbPalette) + 
   scale_fill_manual(values = cbPalette) + 
   geom_abline(slope = 0,
               intercept = 0,
               alpha = 0.5,
               linetype = "dashed") +
-  labs(x = "Condicion", 
-       y = "Pendiente con LM") +
+  labs(x = "Condition", 
+       y = "Slope with LM") +
   # facet_grid(. ~ type) +
   annotate("text", x = 1.5, y = 2,  label = "***", size = 4) +
   annotate("segment", x = 1, xend = 2, y = 1.9, yend = 1.9, colour = "black", size=.5, alpha=1,)+
@@ -121,21 +121,21 @@ f3 =  ggplot(results_tblp, aes(x = condition,y = MBiasSigned, colour = condition
   geom_line(position = position_dodgenudge(direction = "split", width = 3),size = 1.2, alpha=.5)+
   geom_line(data = results_tbls, mapping = aes(x = condition,y = mBiasSigned, group = subject, colour = condition, fill = condition),alpha = 0.6)+
   geom_point(data = results_tbls, mapping = aes(x = condition,y = mBiasSigned, colour = condition, fill = condition), size = 2.4, alpha = 1)+
-  geom_violin(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = condition,y = slope, colour = condition, fill = condition),
-              position = position_nudge_center(x = .3,
-                                               y = 0,
-                                               center_x = 2,
-                                               center_y = -10,
-                                               direction = "split",
-                                               kept.origin = c("original", "none")),trim = FALSE, alpha = .2)+
+  # geom_violin(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = condition,y = slope, colour = condition, fill = condition),
+  #             position = position_nudge_center(x = .3,
+  #                                              y = 0,
+  #                                              center_x = 2,
+  #                                              center_y = -10,
+  #                                              direction = "split",
+  #                                              kept.origin = c("original", "none")),trim = FALSE, alpha = .2)+
   scale_colour_manual(values = cbPalette) + 
   scale_fill_manual(values = cbPalette) + 
   geom_abline(slope = 0,
               intercept = 0,
               alpha = 0.5,
               linetype = "dashed") +
-  labs(x = "Condicion", 
-       y = "Sesgo relativo con signo") +
+  labs(x = "Condition", 
+       y = "Signed bias") +
   # facet_grid(. ~ type) +
   # annotate("text", x = 1.5, y = 2,  label = "***", size = 4) +
   # annotate("segment", x = 1, xend = 2, y = 1.9, yend = 1.9, colour = "black", size=.5, alpha=1,)+
@@ -150,20 +150,20 @@ f4 =  ggplot(results_tblp, aes(x = condition,y = MBiasUnSigned, colour = conditi
   geom_line(position = position_dodgenudge(direction = "split", width = 3),size = 1.2, alpha=.5)+
   geom_line(data = results_tbls, mapping = aes(x = condition,y = mBiasUnSigned, group = subject, colour = condition, fill = condition),alpha = 0.6)+
   geom_point(data = results_tbls, mapping = aes(x = condition,y = mBiasUnSigned, colour = condition, fill = condition), size = 2.4, alpha = 1)+
-  geom_violin(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = condition,y = slope, colour = condition, fill = condition),
-              position = position_nudge_center(x = .3,
-                                               y = 0,
-                                               center_x = 2,
-                                               direction = "split",
-                                               kept.origin = c("original", "none")),trim = FALSE, alpha = .2)+
+  # geom_violin(data = filter(results_tbl,type == "NORMAL"), mapping = aes(x = condition,y = slope, colour = condition, fill = condition),
+  #             position = position_nudge_center(x = .3,
+  #                                              y = 0,
+  #                                              center_x = 2,
+  #                                              direction = "split",
+  #                                              kept.origin = c("original", "none")),trim = FALSE, alpha = .2)+
   scale_colour_manual(values = cbPalette) + 
   scale_fill_manual(values = cbPalette) + 
   # geom_abline(slope = 0,
   #             intercept = 0,
   #             alpha = 0.5,
   #             linetype = "dashed") +
-  labs(x = "Condicion",
-       y = "Sesgo relativo sin signo") +
+  labs(x = "Condition",
+       y = "Unsigned bias") +
   ylim(c(0,1.11))+
   # facet_grid(. ~ type) +
   annotate("text", x = 1.5, y = 1.1,  label = "***", size = 4) +
@@ -184,19 +184,19 @@ Figure1 = ggarrange(f1,
 Figure1
 
 
-
-
-
-Figure1 = ggarrange(f1+theme(plot.margin = unit(c(0,1,-5,1), 'cm')),
-                    ggarrange(f2+rremove("x.text")+rremove("x.title"),
-                              f3+rremove("x.text")+rremove("x.title"),
-                              f4+rremove("x.text")+rremove("x.title"),
-                              ncol = 3, nrow = 1,labels = c("B", "C", "D"),
-                              common.legend = FALSE, legend="none", align = "h")+theme(plot.margin = unit(c(-10,0,-50,0), 'cm')),
-                    heights = c(.8, 1),
-                    ncol = 1, nrow = 2,labels = c("A", ""),
-                    common.legend = TRUE, legend="top", align = "h")
-Figure1
+# 
+# 
+# 
+# Figure1 = ggarrange(f1+theme(plot.margin = unit(c(0,1,-5,1), 'cm')),
+#                     ggarrange(f2+rremove("x.text")+rremove("x.title"),
+#                               f3+rremove("x.text")+rremove("x.title"),
+#                               f4+rremove("x.text")+rremove("x.title"),
+#                               ncol = 3, nrow = 1,labels = c("B", "C", "D"),
+#                               common.legend = FALSE, legend="none", align = "h")+theme(plot.margin = unit(c(-10,0,-50,0), 'cm')),
+#                     heights = c(.8, 1),
+#                     ncol = 1, nrow = 2,labels = c("A", ""),
+#                     common.legend = TRUE, legend="top", align = "h")
+# Figure1
 mi_nombre_de_archivo = paste("figuras", .Platform$file.sep, "FIG1. Experimento1", ".png", sep = '')
 ggsave(mi_nombre_de_archivo, plot=Figure1, width=18, height=15, units="cm", limitsize=FALSE, dpi=600)
 
@@ -247,9 +247,9 @@ f5 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition,
   geom_text(x = 1.1, y = 6.6, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 3.5, color = "#000000")+
   geom_text(x = 1.1, y = 6.1, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 3.5, color = "#E69F00")+
   #geom_text(x = 0.2, y = 6, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#009E73")+
-  scale_x_continuous(name="Distancia de la fuente (m)", limits = c(1,7)) +
-  scale_y_continuous(name="Distancia percibida (m)",   limits = c(1,7)) +
-  ggtitle("Experimento 2")+
+  scale_x_continuous(name="Source distance (m)", limits = c(1,7)) +
+  scale_y_continuous(name="Percived distance (m)",   limits = c(1,7)) +
+  ggtitle("Experiment 2")+
   theme_pubr(base_size = 12, margin = TRUE)+
   theme(legend.position = "top",
         legend.title = element_blank())
@@ -277,8 +277,8 @@ f6 =  ggplot(results_tblp, aes(x = condition,y = mslope,colour = condition)) +
               intercept = 0,
               alpha = 0.5,
               linetype = "dashed") +
-  labs(x = "Condicion", 
-       y = "Pendiente con LM") +
+  labs(x = "Condition", 
+       y = "Slope with LM") +
   # facet_grid(. ~ type) +
   annotate("text", x = 1.5, y = 1.2,  label = "***", size = 4) +
   annotate("segment", x = 1, xend = 2, y = 1.1, yend = 1.1, colour = "black", size=.5, alpha=1,)+
@@ -316,8 +316,8 @@ f7 =  ggplot(results_tblp, aes(x = condition,y = MBiasSigned, colour = condition
               intercept = 0,
               alpha = 0.5,
               linetype = "dashed") +
-  labs(x = "Condicion", 
-       y = "Sesgo relativo con signo") +
+  labs(x = "Condition", 
+       y = "Signed bias") +
   # facet_grid(. ~ type) +
   # annotate("text", x = 1.5, y = 2,  label = "***", size = 4) +
   # annotate("segment", x = 1, xend = 2, y = 1.9, yend = 1.9, colour = "black", size=.5, alpha=1,)+
@@ -340,7 +340,7 @@ f8 =  ggplot(results_tblp, aes(x = condition,y = MBiasUnSigned, colour = conditi
   #             alpha = 0.5,
   #             linetype = "dashed") +
   labs(x = "Condicion",
-       y = "Sesgo relativo sin signo") +
+       y = "Unsigned bias") +
   ylim(c(0,1.11))+
   # facet_grid(. ~ type) +
   annotate("text", x = 1.5, y = 1,  label = "***", size = 4) +
