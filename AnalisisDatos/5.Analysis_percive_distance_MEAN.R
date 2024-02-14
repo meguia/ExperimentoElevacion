@@ -3,12 +3,24 @@ library(lme4)
 library(nlme)
 library(sjPlot)
 library(MuMIn)
-# library(lmerTest)
-# library(jtools)
-# library(broom)
+library(lmerTest)
+library(jtools)
+library(gdtools)
+library(broom)
 library(ggstatsplot)
+library(modelsummary)
 # library(gmodels)
 library(ggpubr)
+# install.packages("stargazer")
+# library(stargazer)
+library(nlme)
+# install.packages("sjPlot")
+library(flextable)
+library(sjPlot)
+# install.packages("webshot")
+library(webshot)
+library(officer)
+
 
 
 rm(list=ls())
@@ -19,11 +31,55 @@ cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "
 
 #LINEAL ----
 #NORMAL
+
 m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance|subject,
                 method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
                 data = filter(results_tbl,type == "NORMAL"))
 extract_stats(ggcoefstats(m.Dist1))
 anova(m.Dist1)
+anov = anova(m.Dist1)
+
+p_val_format <- function(x){
+  z <- scales::pvalue_format()(x)
+  z[!is.finite(x)] <- ""
+  z
+}
+anov$Predictors = c("Intercept","Target distance","Condition","Target distance:Condition")
+anov = data.frame(anov)
+anov <- flextable(anov,col_keys = c("Predictors", "numDF", "denDF", "F.value","p.value")) %>%
+hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
+hline_bottom(border = fp_border(color="black", width = .5))%>%
+  width(j = 1, width = 5, unit = "cm")%>%
+  align(align = "center", part = "all")%>%
+  align(j = 1, align = "left", part = "all")%>%
+  colformat_double(digits = 1, na_str = "N/A")%>%
+  set_formatter(values = list("p.value" = p_val_format) )%>% 
+  font(fontname = "+font-family: Time Now Roman;")%>% 
+font(fontname = "+font-family: Arial;", part = "header")%>% 
+fontsize(size = 10.5, part = "header")%>% 
+fontsize(size = 10.5)%>%
+bold(j = "p.value", bold = TRUE)%>%
+italic(italic = TRUE, part = "header")%>%
+line_spacing(space = 1, part = "body")%>%
+line_spacing(space = .5, part = "header")
+anov
+  
+
+save_as_image(anov,"anov_PAD_POB.png")
+
+tab_model(m.Dist1,file="plot.html")
+tab_model(m.Dist1, wrap.labels = 80,
+              auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Perceived distance",
+              show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
+              CSS = list(css.table = '+font-family: Arial;'),
+              pred.labels = c("Intercept","Target distance", "Condition (Floor level)","Target distance * Condition (Floor level)"),
+              file = "plot.html")
+
+
+webshot("plot.html","plot.png", vwidth = 600, vheight = 100)
+
+
+
 
 
 eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
@@ -75,6 +131,48 @@ m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance
                 data = filter(results_tbl,type == "ROVED"))
 extract_stats(ggcoefstats(m.Dist1))
 anova(m.Dist1)
+
+anov = anova(m.Dist1)
+
+p_val_format <- function(x){
+  z <- scales::pvalue_format()(x)
+  z[!is.finite(x)] <- ""
+  z
+}
+anov$Predictors = c("Intercept","Target distance","Condition","Target distance:Condition")
+anov = data.frame(anov)
+anov <- flextable(anov,col_keys = c("Predictors", "numDF", "denDF", "F.value","p.value")) %>%
+  hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
+  hline_bottom(border = fp_border(color="black", width = .5))%>%
+  width(j = 1, width = 5, unit = "cm")%>%
+  align(align = "center", part = "all")%>%
+  align(j = 1, align = "left", part = "all")%>%
+  colformat_double(digits = 1, na_str = "N/A")%>%
+  set_formatter(values = list("p.value" = p_val_format) )%>% 
+  font(fontname = "+font-family: Time Now Roman;")%>% 
+  font(fontname = "+font-family: Arial;", part = "header")%>% 
+  fontsize(size = 10.5, part = "header")%>% 
+  fontsize(size = 10.5)%>%
+  bold(j = "p.value", bold = TRUE)%>%
+  italic(italic = TRUE, part = "header")%>%
+  line_spacing(space = 1, part = "body")%>%
+  line_spacing(space = .5, part = "header")
+anov
+
+
+save_as_image(anov,"anov_PAD_POB_ROVED.png")
+
+tab_model(m.Dist1,file="plot.html")
+tab_model(m.Dist1, wrap.labels = 80,
+          auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Perceived distance",
+          show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
+          CSS = list(css.table = '+font-family: Arial;'),
+          pred.labels = c("Intercept","Target distance", "Condition (Floor level)","Target distance * Condition (Floor level)"),
+          file = "plotrove.html")
+
+
+webshot("plotrove.html","plotrove.png", vwidth = 600, vheight = 100)
+
 
 
 eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)+italic((b)),
@@ -255,3 +353,50 @@ f4 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition,
 f4
 mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "8. Lme Log-ROVED", ".png", sep = '')
 ggsave(mi_nombre_de_archivo, plot=f4, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
+
+#### debug -----
+# ext_stats = extract_stats(ggcoefstats(m.Dist1))
+# ext_stats_f = flextable(ext_stats$tidy_data) %>%
+#   set_header_labels(values = list(
+#                       term = "Term",
+#                       estimate = "Estimate",
+#                       std.error = "Std.error",
+#                       conf.level = "Conf.level",
+#                       conf.low = "Conf.low",
+#                       conf.high = "Conf.high",
+#                       statistic = "Statistic",
+#                       df.error = "Df.error",
+#                       p.value = "p.value",
+#                       effect = "Effect",
+#                       group = "Group",
+#                       conf.method = "Conf.method",
+#                       expression = "Expression"
+#                     )
+#   )%>%
+#  
+#   fontsize(size = 22)%>%
+#   fontsize(size = 24, part = "header")%>%
+#   width(j = 1, width = 12.6, unit = "cm")%>%
+#   align(align ='center', part = 'all') %>% 
+#   align(j = 1, align ='left', part = 'all')%>%
+#   colformat_num(j = c("estimate","std.error","conf.low","conf.high",
+#                     "statistic","p.value"), digits = 2,  big.mark = " ",
+#                 na_str = "N/A")
+# ext_stats_f = delete_columns(ext_stats_f, j = c("group","conf.method","expression"))
+# ext_stats_f = autofit(ext_stats_f)
+# # ext_stats = theme_booktabs(ext_stats)
+# save_as_image(ext_stats_f,"stats_PAD_POB.png")
+# 
+# 
+# ext_stats_re <- flextable(ext_stats$glance_data)%>%
+#   set_header_labels(values = list(
+#     R2_conditional = "R2 Conditional",
+#     R2_marginal = "R2 Marginal"
+#   )
+#   )%>%
+#   fontsize(size = 8)%>%
+#   fontsize(size = 10, part = "header")%>%
+#   align(align ='center', part = 'all')
+# ext_stats_re = delete_columns(ext_stats_f, j = "expression")
+# ext_stats_re = autofit(ext_stats_re)
+# save_as_image(ext_stats_re,"stats_re_PAD_POB.png")
