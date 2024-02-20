@@ -54,8 +54,9 @@ hline_bottom(border = fp_border(color="black", width = .5))%>%
   align(j = 1, align = "left", part = "all")%>%
   colformat_double(digits = 1, na_str = "N/A")%>%
   set_formatter(values = list("p.value" = p_val_format) )%>% 
-  font(fontname = "+font-family: Time Now Roman;")%>% 
-font(fontname = "+font-family: Arial;", part = "header")%>% 
+  font(fontname = "+font-family: Arial;")%>%
+font(fontname = "+font-family: Arial;", part = "header")%>%
+
 fontsize(size = 10.5, part = "header")%>% 
 fontsize(size = 10.5)%>%
 bold(j = "p.value", bold = TRUE)%>%
