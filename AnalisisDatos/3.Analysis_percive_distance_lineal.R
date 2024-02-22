@@ -55,10 +55,10 @@ for (i in 1:length(levels(results_tbl$subject))) {
                 intercept = m.pend$coefficients[[1]]+m.pend$coefficients[[3]], 
                 alpha = 0.5,
                 color = "#E69F00") +
-    geom_text(x = 0.2, y = 7.6, label = sub, hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#999999")+
-    geom_text(x = 0.2, y = 7.1, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#000000")+
-    geom_text(x = 0.2, y = 6.7, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 4, color = "#E69F00")+
-    geom_text(x = 0.2, y = 6.3, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#009E73")+
+    geom_text(x = 0.2, y = 7.6, label = sub, hjust = 0, nudge_x =  0, parse = TRUE, size = 3.2, color = "#999999")+
+    geom_text(x = 0.2, y = 6.6, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 3.2, color = "#000000")+
+    geom_text(x = 0.2, y = 5.6, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 3.2, color = "#E69F00")+
+    geom_text(x = 0.2, y = 4.6, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 3.2, color = "#009E73")+
     scale_x_continuous(name="Distance source (m)", limits = c(0,8)) +
     scale_y_continuous(name="Perceived distance (m)",   limits = c(0,8)) +
     theme_pubr(base_size = 12, margin = TRUE)+
@@ -71,11 +71,11 @@ for (i in 1:length(levels(results_tbl$subject))) {
 Figure1 = ggarrange(fig_normal[[1]],fig_normal[[2]],fig_normal[[3]],fig_normal[[4]],fig_normal[[5]],fig_normal[[6]],fig_normal[[7]],fig_normal[[8]],fig_normal[[9]],
                     fig_normal[[10]],fig_normal[[11]],fig_normal[[12]],fig_normal[[13]],fig_normal[[14]],fig_normal[[15]],fig_normal[[16]],fig_normal[[17]],fig_normal[[18]],
                     fig_normal[[19]],fig_normal[[20]],
-                    ncol = 5, nrow = 5,
+                    ncol = 4, nrow = 6,
                     common.legend = TRUE, legend="top", align = "hv")
 #Figure1
 mi_nombre_de_archivo = paste("figuras", .Platform$file.sep, "1. Lm for subject NORMAL", ".png", sep = '')
-ggsave(mi_nombre_de_archivo, plot=Figure1, width=50, height=50, units="cm", limitsize=FALSE, dpi=600)
+ggsave(mi_nombre_de_archivo, plot=Figure1, width=20, height=25, units="cm", limitsize=FALSE, dpi=600)
 
 # ROVED ----
 fig_roved = list()
@@ -125,10 +125,10 @@ for (i in 1:length(levels(results_tbl$subject))) {
                 intercept = m.pend$coefficients[[1]]+m.pend$coefficients[[3]], 
                 alpha = 0.5,
                 color = "#E69F00") +
-    geom_text(x = 0.2, y = 7.6, label = sub, hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#999999")+
-    geom_text(x = 0.2, y = 7.1, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#000000")+
-    geom_text(x = 0.2, y = 6.7, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 4, color = "#E69F00")+
-    geom_text(x = 0.2, y = 6.3, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#009E73")+
+    geom_text(x = 0.2, y = 7.6, label = sub, hjust = 0, nudge_x =  0, parse = TRUE, size = 3.2, color = "#999999")+
+    geom_text(x = 0.2, y = 6.6, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 3.2, color = "#000000")+
+    geom_text(x = 0.2, y = 5.6, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 3.2, color = "#E69F00")+
+    geom_text(x = 0.2, y = 4.6, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 3.2, color = "#009E73")+
     scale_x_continuous(name="Distance source (m)", limits = c(0,8)) +
     scale_y_continuous(name="Perceived distance (m)",   limits = c(0,8)) +
     theme_pubr(base_size = 12, margin = TRUE)+
@@ -141,10 +141,10 @@ for (i in 1:length(levels(results_tbl$subject))) {
 Figure2 = ggarrange(fig_roved[[1]],fig_roved[[2]],fig_roved[[3]],fig_roved[[4]],fig_roved[[5]],fig_roved[[6]],fig_roved[[7]],fig_roved[[8]],fig_roved[[9]],
                     fig_roved[[10]],fig_roved[[11]],fig_roved[[12]],fig_roved[[13]],fig_roved[[14]],fig_roved[[15]],fig_roved[[16]],fig_roved[[17]],fig_roved[[18]],
                     fig_roved[[19]],fig_roved[[20]],
-                    ncol = 5, nrow = 5,
+                    ncol = 4, nrow = 6,
                     common.legend = TRUE, legend="top", align = "hv")
 mi_nombre_de_archivo = paste("figuras", .Platform$file.sep, "2. Lm for subject ROVED", ".png", sep = '')
-ggsave(mi_nombre_de_archivo, plot=Figure2, width=50, height=50, units="cm", limitsize=FALSE, dpi=600)
+ggsave(mi_nombre_de_archivo, plot=Figure2, width=20, height=25, units="cm", limitsize=FALSE, dpi=600)
 
 # Write_csv with SLOPE AND INTERCEPTO
 write_csv(results_tbl, "./DatosUnificados/Dresults_without_outliers_slope_and_intercepto.csv")

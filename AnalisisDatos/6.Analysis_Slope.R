@@ -149,7 +149,7 @@ f5 =  ggplot(results_tblp, aes(x = condition,y = mslope, colour = condition, fil
               alpha = 0.5,
               linetype = "dashed") +
   labs(x = "Condition", 
-       y = "Slope with LM") +
+       y = "Range rate") +
   facet_grid(. ~ type) +
   annotate("text", x = 1.5, y = 2,  label = "***", size = 4) +
   annotate("segment", x = 1, xend = 2, y = 1.9, yend = 1.9, colour = "black", size=.5, alpha=1,)+
