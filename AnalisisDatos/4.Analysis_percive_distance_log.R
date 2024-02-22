@@ -64,13 +64,13 @@ for (i in 1:length(levels(results_tbl$subject))) {
     # geom_function(fun = bfloorlevel, colour = "#E69F00")+
     # stat_function(fun = bearlevel, colour = "#000000")+
 
-    geom_text(x = 0.2, y = 7.6, label = sub, hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#999999")+
-    geom_text(x = 0.2, y = 7.1, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#000000")+
-    geom_text(x = 0.2, y = 6.7, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 4, color = "#E69F00")+
-    geom_text(x = 0.2, y = 6.3, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#009E73")+
+    geom_text(x = 0.2, y = 7.6, label = sub, hjust = 0, nudge_x =  0, parse = TRUE, size =  2.6, color = "#999999")+
+    geom_text(x = 0.2, y = 6.6, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 2.6, color = "#000000")+
+    geom_text(x = 0.2, y = 5.6, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 2.6, color = "#E69F00")+
+    geom_text(x = 0.2, y = 4.6, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 2.6, color = "#009E73")+
     scale_x_continuous(name="Distance source (m)", limits = c(0,8)) +
     scale_y_continuous(name="Perceived distance (m)",   limits = c(0,8)) +
-    theme_pubr(base_size = 12, margin = TRUE)+
+    theme_pubr(base_size = 10, margin = TRUE)+
     theme(legend.position = "top",
           legend.title = element_blank())
   fig1
@@ -84,11 +84,11 @@ for (i in 1:length(levels(results_tbl$subject))) {
 Figure1 = ggarrange(fig_normal[[1]],fig_normal[[2]],fig_normal[[3]],fig_normal[[4]],fig_normal[[5]],fig_normal[[6]],fig_normal[[7]],fig_normal[[8]],fig_normal[[9]],
                     fig_normal[[10]],fig_normal[[11]],fig_normal[[12]],fig_normal[[13]],fig_normal[[14]],fig_normal[[15]],fig_normal[[16]],fig_normal[[17]],fig_normal[[18]],
                     fig_normal[[19]],fig_normal[[20]],
-                    ncol = 5, nrow = 5,
+                    ncol = 4, nrow = 6,
                     common.legend = TRUE, legend="top", align = "hv")
 
 mi_nombre_de_archivo = paste("figuras", .Platform$file.sep, "3. Lm for subject NORMAL LOG", ".png", sep = '')
-ggsave(mi_nombre_de_archivo, plot=Figure1, width=50, height=50, units="cm", limitsize=FALSE, dpi=600)
+ggsave(mi_nombre_de_archivo, plot=Figure1, width=20, height=25, units="cm", limitsize=FALSE, dpi=600)
 
 # ROVED ----
 fig_ROVED = list()
@@ -146,13 +146,13 @@ for (i in 1:length(levels(results_tbl$subject))) {
     # geom_function(fun = bfloorlevel, colour = "#E69F00")+
     # stat_function(fun = bearlevel, colour = "#000000")+
     
-    geom_text(x = 0.2, y = 7.6, label = sub, hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#999999")+
-    geom_text(x = 0.2, y = 7.1, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#000000")+
-    geom_text(x = 0.2, y = 6.7, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 4, color = "#E69F00")+
-    geom_text(x = 0.2, y = 6.3, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#009E73")+
+    geom_text(x = 0.2, y = 7.6, label = sub, hjust = 0, nudge_x =  0, parse = TRUE, size = 2.6, color = "#999999")+
+    geom_text(x = 0.2, y = 6.6, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 2.6, color = "#000000")+
+    geom_text(x = 0.2, y = 5.6, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 2.6, color = "#E69F00")+
+    geom_text(x = 0.2, y = 4.6, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 2.6, color = "#009E73")+
     scale_x_continuous(name="Distance source (m)", limits = c(0,8)) +
     scale_y_continuous(name="Perceived distance (m)",   limits = c(0,8)) +
-    theme_pubr(base_size = 12, margin = TRUE)+
+    theme_pubr(base_size = 10, margin = TRUE)+
     theme(legend.position = "top",
           legend.title = element_blank())
   fig1
@@ -166,11 +166,11 @@ for (i in 1:length(levels(results_tbl$subject))) {
 Figure2 = ggarrange(fig_ROVED[[1]],fig_ROVED[[2]],fig_ROVED[[3]],fig_ROVED[[4]],fig_ROVED[[5]],fig_ROVED[[6]],fig_ROVED[[7]],fig_ROVED[[8]],fig_ROVED[[9]],
                     fig_ROVED[[10]],fig_ROVED[[11]],fig_ROVED[[12]],fig_ROVED[[13]],fig_ROVED[[14]],fig_ROVED[[15]],fig_ROVED[[16]],fig_ROVED[[17]],fig_ROVED[[18]],
                     fig_ROVED[[19]],fig_ROVED[[20]],
-                    ncol = 5, nrow = 5,
+                    ncol = 4, nrow = 6,
                     common.legend = TRUE, legend="top", align = "hv")
 
 mi_nombre_de_archivo = paste("figuras", .Platform$file.sep, "4. Lm for subject ROVED LOG", ".png", sep = '')
-ggsave(mi_nombre_de_archivo, plot=Figure2, width=50, height=50, units="cm", limitsize=FALSE, dpi=600)
+ggsave(mi_nombre_de_archivo, plot=Figure2, width=20, height=25, units="cm", limitsize=FALSE, dpi=600)
 
 # Write_csv with SLOPE AND INTERCEPTO
 write_csv(results_tbl, "./DatosUnificados/Dresults_without_outliers_slope_and_intercepto_lin_log.csv")
