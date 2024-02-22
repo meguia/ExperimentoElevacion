@@ -55,7 +55,7 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition,
   geom_text(x = 1.1, y = 6.1, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 3.5, color = "#E69F00")+
   #geom_text(x = 0.2, y = 6, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#009E73")+
   scale_x_continuous(name="Source distance (m)", limits = c(1,7)) +
-  scale_y_continuous(name="Percived distance (m)",   limits = c(1,7)) +
+  scale_y_continuous(name="Perceived distance (m)",   limits = c(1,7)) +
   ggtitle("Experiment 1")+
   theme_pubr(base_size = 12, margin = TRUE)+
   theme(legend.position = "top",
@@ -248,7 +248,7 @@ f5 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition,
   geom_text(x = 1.1, y = 6.1, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 3.5, color = "#E69F00")+
   #geom_text(x = 0.2, y = 6, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#009E73")+
   scale_x_continuous(name="Source distance (m)", limits = c(1,7)) +
-  scale_y_continuous(name="Percived distance (m)",   limits = c(1,7)) +
+  scale_y_continuous(name="Perceived distance (m)",   limits = c(1,7)) +
   ggtitle("Experiment 2")+
   theme_pubr(base_size = 12, margin = TRUE)+
   theme(legend.position = "top",
