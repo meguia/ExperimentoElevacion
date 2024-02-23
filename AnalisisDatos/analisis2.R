@@ -1,14 +1,25 @@
 library(tidyverse)
 library(lme4)
 library(nlme)
+library(sjPlot)
+library(MuMIn)
 library(lmerTest)
-library(emmeans)
 library(jtools)
+library(gdtools)
 library(broom)
 library(ggstatsplot)
-library(gmodels)
+library(modelsummary)
+# library(gmodels)
 library(ggpubr)
-library(Routliers)
+# install.packages("stargazer")
+# library(stargazer)
+library(nlme)
+# install.packages("sjPlot")
+library(flextable)
+library(sjPlot)
+# install.packages("webshot")
+library(webshot)
+library(officer)
 
 rm(list=ls())
 figures_folder = "figuras"
@@ -849,6 +860,11 @@ f3 <- ggplot(tabla.ind.var, aes(x=target_distance, y =mSD, group = condition, co
         legend.title = element_blank())
 
 f3
+mi_nombre_de_archivo = paste("figuras", .Platform$file.sep, "12.Intrasujetos Desvio", ".png", sep = '')
+ggsave(mi_nombre_de_archivo, plot=f3, width=15, height=10, units="cm", limitsize=FALSE, dpi=600)
+
+
+
 
 tabla.ind.var <- filter(results_tbl,type == "ROVED") %>% 
   group_by(target_distance,condition) %>%
