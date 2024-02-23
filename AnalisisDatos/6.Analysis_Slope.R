@@ -6,6 +6,7 @@ library(MuMIn)
 library(ggstatsplot)
 library(ggpubr)
 library(ggpp)
+library(reshape)
 
 
 rm(list=ls())
@@ -125,10 +126,24 @@ t.test(filter(results_tbl,
 a = results_tbl[results_tbl$target_distance == 6,]
 b = results_tbl[results_tbl$target_distance == 2,]
 
-results_tblrange <- results_tbl %>% 
-  group_by(subject,condition, type) %>%
-  summarise(range  = results_tbl[results_tbl$target_distance == 6,]$perc_dist-results_tbl[results_tbl$target_distance == 2,]$perc_dist)  %>%
+
+
+
+a1 <- filter(results_tbl, target_distance == 6| target_distance == 2)%>%
+  group_by(subject,condition, type, target_distance) %>%
+  summarise(perc_dist = perc_dist)%>%
   ungroup()
+
+a6 = a1[a1$target_distance == 6,]
+a6 = rename(a6, c(perc_dist="perc_dist6"))
+a6 = rename(a6, c(target_distance = "target_distance6"))
+
+
+a2 = a1[a1$target_distance == 2,]
+a2 = rename(a2, c(perc_dist="perc_dist2"))
+a2 = rename(a2, c(target_distance = "target_distance2"))
+results_tblrange  = merge(x = a2, y = a6, all.x = TRUE)
+results_tblrange$range = results_tblrange$perc_dist6 -  results_tblrange$perc_dist2 
 
 results_tblp <- results_tblrange %>% 
   group_by(condition, type) %>%
