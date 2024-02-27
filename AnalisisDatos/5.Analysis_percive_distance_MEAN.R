@@ -39,14 +39,21 @@ extract_stats(ggcoefstats(m.Dist1))
 anova(m.Dist1)
 anov = anova(m.Dist1)
 
+m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(target_distance|subject),
+                data = filter(results_tbl,type == "NORMAL"))
+extract_stats(ggcoefstats(m.Dist1))
+anova(m.Dist1)
+anov = anova(m.Dist1)
+
+
 p_val_format <- function(x){
   z <- scales::pvalue_format()(x)
   z[!is.finite(x)] <- ""
   z
 }
-anov$Predictors = c("Intercept","Target distance","Condition","Target distance:Condition")
+anov$Predictors = c("Target distance","Condition","Target distance:Condition")
 anov = data.frame(anov)
-anov <- flextable(anov,col_keys = c("Predictors", "numDF", "denDF", "F.value","p.value")) %>%
+anov <- flextable(anov,col_keys = c("Predictors","numDF", "denDF", "F.value","p.value")) %>%
 hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
 hline_bottom(border = fp_border(color="black", width = .5))%>%
   width(j = 1, width = 5, unit = "cm")%>%

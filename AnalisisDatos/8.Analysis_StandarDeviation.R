@@ -49,10 +49,13 @@ f3 <- ggplot(tabla.ind.var, aes(x=target_distance, y =mSD, group = condition, co
   geom_abline(intercept = 0, slope = 0, linetype=2) +
   facet_grid(.~ type )+
   # scale_y_log10(name="Standard deviation (m)\n +/- SEM Intra-subject") +
-  scale_y_log10(name="Standard deviation (m)\n +/- SEM Intra-subject", breaks=c(0,0.5,1,1.5,2), 
+  # scale_y_log10(name="Standard deviation (m)\n +/- SEM Intra-subject", breaks=c(0,0.5,1,1.5,2),
+  #               labels=c(0,0.5,1,1.5,2), minor_breaks=NULL, limits = c(-1.1,2)) +
+  # scale_x_log10(name="Distance source (m)",  breaks=c(2,2.9,4.2,6), labels=c(2,2.9,4.2,6), minor_breaks=NULL, limits = c(1.9,6.1)) +
+  scale_y_continuous(name="Standard deviation (m)\n +/- SEM Intra-subject", breaks=c(0,0.5,1,1.5,2),
                 labels=c(0,0.5,1,1.5,2), minor_breaks=NULL, limits = c(-1.1,2)) +
-  scale_x_log10(name="Distance source (m)",  breaks=c(2,2.9,4.2,6), labels=c(2,2.9,4.2,6), minor_breaks=NULL, limits = c(1.9,6.1)) +
-  theme_pubr(base_size = 12, margin = TRUE)+
+  scale_x_continuous(name="Distance source (m)",  breaks=c(2,2.9,4.2,6), labels=c(2,2.9,4.2,6), minor_breaks=NULL, limits = c(1.9,6.1)) +
+    theme_pubr(base_size = 12, margin = TRUE)+
   theme(legend.position = "top",
         legend.title = element_blank())
 
@@ -61,11 +64,15 @@ mi_nombre_de_archivo = paste("figuras", .Platform$file.sep, "12.Intrasujetos Des
 ggsave(mi_nombre_de_archivo, plot=f3, width=15, height=10, units="cm", limitsize=FALSE, dpi=600)
 
 m.Dist1 <-  lme(perc_dist_sd ~ target_distance*condition, random = ~target_distance|subject,
-                method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
+                method = "ML", control =list(msMaxIter = 1e8, msMaxEval = 1e8),
                 data = filter(results_tbl,type == "ROVED"))
-extract_stats(ggcoefstats(m.Dist1))
-anova(m.Dist1)
-anov = anova(m.Dist1)
+
+am.Dist1 <-  lmer(perc_dist_sd ~ target_distance*condition + (target_distance|subject),
+                data = filter(results_tbl,type == "ROVED"))
+
+extract_stats(ggcoefstats(am.Dist1))
+anova(am.Dist1)
+anov = anova(am.Dist1)
 
 p_val_format <- function(x){
   z <- scales::pvalue_format()(x)
@@ -97,7 +104,7 @@ anov
 save_as_image(anov,"anov_PAD_POB.png")
 
 tab_model(m.Dist1,file="plot.html")
-tab_model(m.Dist1, wrap.labels = 80,
+tab_model(am.Dist1, wrap.labels = 80,
               auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Perceived distance",
               show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
               CSS = list(css.table = '+font-family: Arial;'),
@@ -105,7 +112,7 @@ tab_model(m.Dist1, wrap.labels = 80,
               file = "plot.html")
 
 
-webshot("plot.html","plot.png", vwidth = 600, vheight = 100)
+webshot("plot.html","ploat.png", vwidth = 600, vheight = 100)
 
 
 tabla.ind.var <- filter(results_tbl,type == "ROVED") %>% 
