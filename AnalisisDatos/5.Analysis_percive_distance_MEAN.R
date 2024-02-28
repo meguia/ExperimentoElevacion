@@ -1,6 +1,6 @@
 library(tidyverse)
 library(lme4)
-library(nlme)
+# library(nlme)
 library(sjPlot)
 library(MuMIn)
 library(lmerTest)
@@ -32,18 +32,18 @@ cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "
 #LINEAL ----
 #NORMAL
 
-m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance|subject,
-                method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
-                data = filter(results_tbl,type == "NORMAL"))
-extract_stats(ggcoefstats(m.Dist1))
-anova(m.Dist1)
-anov = anova(m.Dist1)
+# m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance|subject,
+#                 method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
+#                 data = filter(results_tbl,type == "NORMAL"))
+# extract_stats(ggcoefstats(m.Dist1))
+# anova(m.Dist1)
+# anov = anova(m.Dist1)
 
 m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(target_distance|subject),
                 data = filter(results_tbl,type == "NORMAL"))
 extract_stats(ggcoefstats(m.Dist1))
 anova(m.Dist1)
-anov = anova(m.Dist1)
+anov1 = anova(m.Dist1)
 
 
 p_val_format <- function(x){
@@ -51,29 +51,29 @@ p_val_format <- function(x){
   z[!is.finite(x)] <- ""
   z
 }
-anov$Predictors = c("Target distance","Condition","Target distance:Condition")
-anov = data.frame(anov)
-anov <- flextable(anov,col_keys = c("Predictors","numDF", "denDF", "F.value","p.value")) %>%
+anov1$Predictors = c("Target distance","Condition","Target distance:Condition")
+anov1 = data.frame(anov1)
+anov1 <- flextable(anov1,col_keys = c("Predictors","NumDF","DenDF", "F.value","Pr..F.")) %>%
 hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
 hline_bottom(border = fp_border(color="black", width = .5))%>%
   width(j = 1, width = 5, unit = "cm")%>%
   align(align = "center", part = "all")%>%
   align(j = 1, align = "left", part = "all")%>%
   colformat_double(digits = 1, na_str = "N/A")%>%
-  set_formatter(values = list("p.value" = p_val_format) )%>% 
+  set_formatter(values = list("Pr..F." = p_val_format) )%>% 
   font(fontname = "+font-family: Arial;")%>%
 font(fontname = "+font-family: Arial;", part = "header")%>%
 
 fontsize(size = 10.5, part = "header")%>% 
 fontsize(size = 10.5)%>%
-bold(j = "p.value", bold = TRUE)%>%
+bold(j = "Pr..F.", bold = TRUE)%>%
 italic(italic = TRUE, part = "header")%>%
 line_spacing(space = 1, part = "body")%>%
 line_spacing(space = .5, part = "header")
-anov
+anov1
   
 
-save_as_image(anov,"anov_PAD_POB.png")
+save_as_image(anov1,"Anov_PAD_POB_NORMAL_LIN.png")
 
 tab_model(m.Dist1,file="plot.html")
 tab_model(m.Dist1, wrap.labels = 80,
@@ -84,12 +84,13 @@ tab_model(m.Dist1, wrap.labels = 80,
               file = "plot.html")
 
 
-webshot("plot.html","plot.png", vwidth = 600, vheight = 100)
+webshot("plot.html","Summary_PAD_POB_NORMAL_LIN.png", vwidth = 600, vheight = 100)
 
 
 
-
-
+m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance|subject,
+                method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
+                data = filter(results_tbl,type == "NORMAL"))
 eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
                   list(a = round(m.Dist1$coefficients$fixed[[2]],digits = 2),
                        b = round(m.Dist1$coefficients$fixed[[1]], digits = 2)))
@@ -134,41 +135,52 @@ mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "5. Lme Lineal-
 ggsave(mi_nombre_de_archivo, plot=f1, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
 
 # ROVED
-m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance|subject,
-                method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
-                data = filter(results_tbl,type == "ROVED"))
+m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(1+condition*target_distance|subject),
+                 data = filter(results_tbl,type == "ROVED"))
 extract_stats(ggcoefstats(m.Dist1))
 anova(m.Dist1)
+anov1 = anova(m.Dist1)
 
-anov = anova(m.Dist1)
+table1 = filter(results_tbl,type == "ROVED")
+table1$Model.6.fitted<-predict(m.Dist1)
+FittedlmPlot6 <-ggplot()+
+  facet_grid(subject ~ condition, labeller=label_both)+
+  geom_line(data = table1, aes(x = target_distance, y =Model.6.fitted))+
+  geom_point(data = table1, aes(x = target_distance, y =perc_dist, group=subject,colour = subject), size=3)+
+  #  coord_cartesian(ylim = c(.03,.074))+ 
+  xlab("Distance source (m)")+ylab("Perceived distance (m)")
+FittedlmPlot6
+
+
 
 p_val_format <- function(x){
   z <- scales::pvalue_format()(x)
   z[!is.finite(x)] <- ""
   z
 }
-anov$Predictors = c("Intercept","Target distance","Condition","Target distance:Condition")
-anov = data.frame(anov)
-anov <- flextable(anov,col_keys = c("Predictors", "numDF", "denDF", "F.value","p.value")) %>%
+anov1$Predictors = c("Target distance","Condition","Target distance:Condition")
+anov1 = data.frame(anov1)
+anov1 <- flextable(anov1,col_keys = c("Predictors","NumDF","DenDF", "F.value","Pr..F.")) %>%
   hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
   hline_bottom(border = fp_border(color="black", width = .5))%>%
   width(j = 1, width = 5, unit = "cm")%>%
   align(align = "center", part = "all")%>%
   align(j = 1, align = "left", part = "all")%>%
   colformat_double(digits = 1, na_str = "N/A")%>%
-  set_formatter(values = list("p.value" = p_val_format) )%>% 
-  font(fontname = "+font-family: Time Now Roman;")%>% 
-  font(fontname = "+font-family: Arial;", part = "header")%>% 
+  set_formatter(values = list("Pr..F." = p_val_format) )%>% 
+  font(fontname = "+font-family: Arial;")%>%
+  font(fontname = "+font-family: Arial;", part = "header")%>%
+  
   fontsize(size = 10.5, part = "header")%>% 
   fontsize(size = 10.5)%>%
-  bold(j = "p.value", bold = TRUE)%>%
+  bold(j = "Pr..F.", bold = TRUE)%>%
   italic(italic = TRUE, part = "header")%>%
   line_spacing(space = 1, part = "body")%>%
   line_spacing(space = .5, part = "header")
-anov
+anov1
 
 
-save_as_image(anov,"anov_PAD_POB_ROVED.png")
+save_as_image(anov1,"Anov_PAD_POB_ROVED_LIN.png")
 
 tab_model(m.Dist1,file="plot.html")
 tab_model(m.Dist1, wrap.labels = 80,
@@ -176,12 +188,14 @@ tab_model(m.Dist1, wrap.labels = 80,
           show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
           CSS = list(css.table = '+font-family: Arial;'),
           pred.labels = c("Intercept","Target distance", "Condition (Floor level)","Target distance * Condition (Floor level)"),
-          file = "plotrove.html")
+          file = "plot.html")
 
 
-webshot("plotrove.html","plotrove.png", vwidth = 600, vheight = 100)
+webshot("plot.html","Summary_PAD_POB_ROVED_LIN.png", vwidth = 600, vheight = 100)
 
-
+m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance|subject,
+                method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
+                data = filter(results_tbl,type == "ROVED"))
 
 eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)+italic((b)),
                   list(a = round(m.Dist1$coefficients$fixed[[2]],digits = 2),
