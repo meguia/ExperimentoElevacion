@@ -13,7 +13,7 @@ library(modelsummary)
 library(ggpubr)
 # install.packages("stargazer")
 # library(stargazer)
-library(nlme)
+# library(nlme)
 # install.packages("sjPlot")
 library(flextable)
 library(sjPlot)
@@ -42,6 +42,8 @@ cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "
 m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(target_distance|subject),
                 data = filter(results_tbl,type == "NORMAL"))
 extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+
 anova(m.Dist1)
 anov1 = anova(m.Dist1)
 
@@ -75,7 +77,7 @@ anov1
 
 save_as_image(anov1,"Anov_PAD_POB_NORMAL_LIN.png")
 
-tab_model(m.Dist1,file="plot.html")
+# tab_model(m.Dist1,file="plot.html")
 tab_model(m.Dist1, wrap.labels = 80,
               auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Perceived distance",
               show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
@@ -135,23 +137,13 @@ mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "5. Lme Lineal-
 ggsave(mi_nombre_de_archivo, plot=f1, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
 
 # ROVED
-m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(1+condition*target_distance|subject),
+m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(target_distance|subject),
                  data = filter(results_tbl,type == "ROVED"))
 extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+
 anova(m.Dist1)
 anov1 = anova(m.Dist1)
-
-table1 = filter(results_tbl,type == "ROVED")
-table1$Model.6.fitted<-predict(m.Dist1)
-FittedlmPlot6 <-ggplot()+
-  facet_grid(subject ~ condition, labeller=label_both)+
-  geom_line(data = table1, aes(x = target_distance, y =Model.6.fitted))+
-  geom_point(data = table1, aes(x = target_distance, y =perc_dist, group=subject,colour = subject), size=3)+
-  #  coord_cartesian(ylim = c(.03,.074))+ 
-  xlab("Distance source (m)")+ylab("Perceived distance (m)")
-FittedlmPlot6
-
-
 
 p_val_format <- function(x){
   z <- scales::pvalue_format()(x)
@@ -243,6 +235,60 @@ ggsave(mi_nombre_de_archivo, plot=f2, width=15, height=15, units="cm", limitsize
 
 #LOG ----
 #NORMAL
+
+m.Dist1 <-  lmer(log10(perc_dist) ~ log10(target_distance)*condition+(log10(target_distance)|subject),
+                 data = filter(results_tbl,type == "NORMAL"))
+extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+
+anova(m.Dist1)
+anov1 = anova(m.Dist1)
+
+
+p_val_format <- function(x){
+  z <- scales::pvalue_format()(x)
+  z[!is.finite(x)] <- ""
+  z
+}
+anov1$Predictors = c("Target distance","Condition","Target distance:Condition")
+anov1 = data.frame(anov1)
+anov1 <- flextable(anov1,col_keys = c("Predictors","NumDF","DenDF", "F.value","Pr..F.")) %>%
+  hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
+  hline_bottom(border = fp_border(color="black", width = .5))%>%
+  width(j = 1, width = 5, unit = "cm")%>%
+  align(align = "center", part = "all")%>%
+  align(j = 1, align = "left", part = "all")%>%
+  colformat_double(digits = 1, na_str = "N/A")%>%
+  set_formatter(values = list("Pr..F." = p_val_format) )%>% 
+  font(fontname = "+font-family: Arial;")%>%
+  font(fontname = "+font-family: Arial;", part = "header")%>%
+  
+  fontsize(size = 10.5, part = "header")%>% 
+  fontsize(size = 10.5)%>%
+  bold(j = "Pr..F.", bold = TRUE)%>%
+  italic(italic = TRUE, part = "header")%>%
+  line_spacing(space = 1, part = "body")%>%
+  line_spacing(space = .5, part = "header")
+anov1
+
+
+save_as_image(anov1,"Anov_PAD_POB_NORMAL_LOG.png")
+
+# tab_model(m.Dist1,file="plot.html")
+tab_model(m.Dist1, wrap.labels = 80,
+          auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Perceived distance",
+          show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
+          CSS = list(css.table = '+font-family: Arial;'),
+          pred.labels = c("Intercept","Target distance", "Condition (Floor level)","Target distance * Condition (Floor level)"),
+          file = "plot.html")
+
+
+webshot("plot.html","Summary_PAD_POB_NORMAL_LOG.png", vwidth = 600, vheight = 100)
+
+
+
+
+
 m.Dist1 <-  lme(log10(perc_dist) ~ log10(target_distance)*condition, random = ~log10(target_distance)|subject,
                 method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
                 data = filter(results_tbl,type == "NORMAL"))
@@ -310,6 +356,64 @@ mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "7. Lme Log-Nor
 ggsave(mi_nombre_de_archivo, plot=f1, width=15, height=15, units="cm", limitsize=FALSE, dpi=600)
 
 # ROVED
+
+m.Dist1 <-  lmer(log10(perc_dist) ~ log10(target_distance)*condition+(log10(target_distance)|subject),
+                 data = filter(results_tbl,type == "ROVED"))
+extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+
+anova(m.Dist1)
+anov1 = anova(m.Dist1)
+
+
+p_val_format <- function(x){
+  z <- scales::pvalue_format()(x)
+  z[!is.finite(x)] <- ""
+  z
+}
+anov1$Predictors = c("Target distance","Condition","Target distance:Condition")
+anov1 = data.frame(anov1)
+anov1 <- flextable(anov1,col_keys = c("Predictors","NumDF","DenDF", "F.value","Pr..F.")) %>%
+  hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
+  hline_bottom(border = fp_border(color="black", width = .5))%>%
+  width(j = 1, width = 5, unit = "cm")%>%
+  align(align = "center", part = "all")%>%
+  align(j = 1, align = "left", part = "all")%>%
+  colformat_double(digits = 1, na_str = "N/A")%>%
+  set_formatter(values = list("Pr..F." = p_val_format) )%>% 
+  font(fontname = "+font-family: Arial;")%>%
+  font(fontname = "+font-family: Arial;", part = "header")%>%
+  
+  fontsize(size = 10.5, part = "header")%>% 
+  fontsize(size = 10.5)%>%
+  bold(j = "Pr..F.", bold = TRUE)%>%
+  italic(italic = TRUE, part = "header")%>%
+  line_spacing(space = 1, part = "body")%>%
+  line_spacing(space = .5, part = "header")
+anov1
+
+
+save_as_image(anov1,"Anov_PAD_POB_ROVEDL_LOG.png")
+
+# tab_model(m.Dist1,file="plot.html")
+tab_model(m.Dist1, wrap.labels = 80,
+          auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Perceived distance",
+          show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
+          CSS = list(css.table = '+font-family: Arial;'),
+          pred.labels = c("Intercept","Target distance", "Condition (Floor level)","Target distance * Condition (Floor level)"),
+          file = "plot.html")
+
+
+webshot("plot.html","Summary_PAD_POB_ROVED_LOG.png", vwidth = 600, vheight = 100)
+
+
+
+
+
+
+
+
+
 m.Dist1 <-  lme(log10(perc_dist) ~ log10(target_distance)*condition, random = ~log10(target_distance)|subject,
                 method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
                 data = filter(results_tbl,type == "ROVED"))

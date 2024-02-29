@@ -75,7 +75,7 @@ Figure1 = ggarrange(fig_normal[[1]],fig_normal[[2]],fig_normal[[3]],fig_normal[[
                     common.legend = TRUE, legend="top", align = "hv")
 #Figure1
 mi_nombre_de_archivo = paste("figuras", .Platform$file.sep, "1. Lm for subject NORMAL", ".png", sep = '')
-ggsave(mi_nombre_de_archivo, plot=Figure1, width=20, height=25, units="cm", limitsize=FALSE, dpi=600)
+ggsave(mi_nombre_de_archivo, plot=Figure1, width=27, height=35, units="cm", limitsize=FALSE, dpi=600)
 
 # ROVED ----
 fig_roved = list()
@@ -144,7 +144,7 @@ Figure2 = ggarrange(fig_roved[[1]],fig_roved[[2]],fig_roved[[3]],fig_roved[[4]],
                     ncol = 4, nrow = 6,
                     common.legend = TRUE, legend="top", align = "hv")
 mi_nombre_de_archivo = paste("figuras", .Platform$file.sep, "2. Lm for subject ROVED", ".png", sep = '')
-ggsave(mi_nombre_de_archivo, plot=Figure2, width=20, height=25, units="cm", limitsize=FALSE, dpi=600)
+ggsave(mi_nombre_de_archivo, plot=Figure2, width=27, height=35, units="cm", limitsize=FALSE, dpi=600)
 
 # Write_csv with SLOPE AND INTERCEPTO
 write_csv(results_tbl, "./DatosUnificados/Dresults_without_outliers_slope_and_intercepto.csv")

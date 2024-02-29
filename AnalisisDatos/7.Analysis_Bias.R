@@ -1,6 +1,6 @@
 library(tidyverse)
 library(lme4)
-library(nlme)
+# library(nlme)
 library(sjPlot)
 library(MuMIn)
 library(ggstatsplot)
@@ -73,10 +73,62 @@ aaa <- filter(results_tbl,type == "NORMAL") %>%
   group_by(subject,condition) %>%
   summarise(mSesgoRel  = mean(rel_bias_signed)) %>%
   ungroup()
+
 m.RelativBias <- lm(mSesgoRel ~ condition, 
                     data = aaa)
 extract_stats(ggcoefstats(m.RelativBias))
-anova(m.RelativBias)
+anov = anova(m.RelativBias)
+anov
+
+
+p_val_format <- function(x){
+  z <- scales::pvalue_format()(x)
+  z[!is.finite(x)] <- ""
+  z
+}
+anov$Predictors = c("Condition","Residuals")
+anov = data.frame(anov)
+anov <- flextable(anov,col_keys = c("Predictors","Df", "Sum.Sq", "Mean.Sq", "F.value","Pr..F.")) %>%
+  hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
+  hline_bottom(border = fp_border(color="black", width = .5))%>%
+  width(j = 1, width = 3, unit = "cm")%>%
+  align(align = "center", part = "all")%>%
+  align(j = 1, align = "left", part = "all")%>%
+  colformat_double(digits = 1, na_str = "N/A")%>%
+  set_formatter(values = list("Pr..F." = p_val_format) )%>% 
+  font(fontname = "+font-family: Arial;")%>%
+  font(fontname = "+font-family: Arial;", part = "header")%>%
+  
+  fontsize(size = 10.5, part = "header")%>% 
+  fontsize(size = 10.5)%>%
+  bold(j = "Pr..F.", bold = TRUE)%>%
+  italic(italic = TRUE, part = "header")%>%
+  line_spacing(space = 1, part = "body")%>%
+  line_spacing(space = .5, part = "header")
+
+anov
+
+
+save_as_image(anov,"anov_SIGNED_BIAS_POB_NORMAL.png")
+
+# tab_model(m.RangeRate,file="plot.html")
+tab_model(m.RelativBias, wrap.labels = 80,
+          auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Signed bias",
+          show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
+          CSS = list(css.table = '+font-family: Arial;'),
+          pred.labels = c("Intercept","Condition (Floor level)"),
+          file = "plote.html")
+
+
+webshot("plote.html","Summary_SIGNED_BIAS_POB_NORMAL.png", vwidth = 600, vheight = 100)
+
+
+
+
+
+
+
+
 
 aaa <- filter(results_tbl,type == "ROVED") %>% 
   group_by(subject,condition) %>%
@@ -84,8 +136,61 @@ aaa <- filter(results_tbl,type == "ROVED") %>%
   ungroup()
 m.RelativBias <- lm(mSesgoRel ~ condition, 
                     data = aaa)
+
 extract_stats(ggcoefstats(m.RelativBias))
-anova(m.RelativBias)
+anov = anova(m.RelativBias)
+anov
+
+
+p_val_format <- function(x){
+  z <- scales::pvalue_format()(x)
+  z[!is.finite(x)] <- ""
+  z
+}
+anov$Predictors = c("Condition","Residuals")
+anov = data.frame(anov)
+anov <- flextable(anov,col_keys = c("Predictors","Df", "Sum.Sq", "Mean.Sq", "F.value","Pr..F.")) %>%
+  hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
+  hline_bottom(border = fp_border(color="black", width = .5))%>%
+  width(j = 1, width = 3, unit = "cm")%>%
+  align(align = "center", part = "all")%>%
+  align(j = 1, align = "left", part = "all")%>%
+  colformat_double(digits = 1, na_str = "N/A")%>%
+  set_formatter(values = list("Pr..F." = p_val_format) )%>% 
+  font(fontname = "+font-family: Arial;")%>%
+  font(fontname = "+font-family: Arial;", part = "header")%>%
+  
+  fontsize(size = 10.5, part = "header")%>% 
+  fontsize(size = 10.5)%>%
+  bold(j = "Pr..F.", bold = TRUE)%>%
+  italic(italic = TRUE, part = "header")%>%
+  line_spacing(space = 1, part = "body")%>%
+  line_spacing(space = .5, part = "header")
+
+anov
+
+
+save_as_image(anov,"anov_SIGNED_BIAS_POB_ROVED.png")
+
+# tab_model(m.RangeRate,file="plot.html")
+tab_model(m.RelativBias, wrap.labels = 80,
+          auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Signed bias",
+          show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
+          CSS = list(css.table = '+font-family: Arial;'),
+          pred.labels = c("Intercept","Condition (Floor level)"),
+          file = "plote.html")
+
+
+webshot("plote.html","Summary_SIGNED_BIAS_POB_ROVED.png", vwidth = 600, vheight = 100)
+
+
+
+
+
+
+
+
+
 
 # Unsigned
 f7 =  ggplot(results_tblp, aes(x = condition,y = MBiasUnSigned, colour = condition, fill = condition)) +
@@ -137,6 +242,58 @@ m.RelativBias <- lm(mSesgoRel ~ condition,
 extract_stats(ggcoefstats(m.RelativBias))
 anova(m.RelativBias)
 
+extract_stats(ggcoefstats(m.RelativBias))
+anov = anova(m.RelativBias)
+anov
+
+
+p_val_format <- function(x){
+  z <- scales::pvalue_format()(x)
+  z[!is.finite(x)] <- ""
+  z
+}
+anov$Predictors = c("Condition","Residuals")
+anov = data.frame(anov)
+anov <- flextable(anov,col_keys = c("Predictors","Df", "Sum.Sq", "Mean.Sq", "F.value","Pr..F.")) %>%
+  hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
+  hline_bottom(border = fp_border(color="black", width = .5))%>%
+  width(j = 1, width = 3, unit = "cm")%>%
+  align(align = "center", part = "all")%>%
+  align(j = 1, align = "left", part = "all")%>%
+  colformat_double(digits = 1, na_str = "N/A")%>%
+  set_formatter(values = list("Pr..F." = p_val_format) )%>% 
+  font(fontname = "+font-family: Arial;")%>%
+  font(fontname = "+font-family: Arial;", part = "header")%>%
+  
+  fontsize(size = 10.5, part = "header")%>% 
+  fontsize(size = 10.5)%>%
+  bold(j = "Pr..F.", bold = TRUE)%>%
+  italic(italic = TRUE, part = "header")%>%
+  line_spacing(space = 1, part = "body")%>%
+  line_spacing(space = .5, part = "header")
+
+anov
+
+
+save_as_image(anov,"anov_UNSIGNED_BIAS_POB_NORMAL.png")
+
+# tab_model(m.RangeRate,file="plot.html")
+tab_model(m.RelativBias, wrap.labels = 80,
+          auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Unsigned bias",
+          show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
+          CSS = list(css.table = '+font-family: Arial;'),
+          pred.labels = c("Intercept","Condition (Floor level)"),
+          file = "plote.html")
+
+
+webshot("plote.html","Summary_UNSIGNED_BIAS_POB_NORMAL.png", vwidth = 600, vheight = 100)
+
+
+
+
+
+
+
 aaa <- filter(results_tbl,type == "ROVED") %>% 
   group_by(subject,condition) %>%
   summarise(mSesgoRel  = mean(rel_bias_unsigned)) %>%
@@ -145,3 +302,52 @@ m.RelativBias <- lm(mSesgoRel ~ condition,
                     data = aaa)
 extract_stats(ggcoefstats(m.RelativBias))
 anova(m.RelativBias)
+
+
+extract_stats(ggcoefstats(m.RelativBias))
+anov = anova(m.RelativBias)
+anov
+
+
+p_val_format <- function(x){
+  z <- scales::pvalue_format()(x)
+  z[!is.finite(x)] <- ""
+  z
+}
+anov$Predictors = c("Condition","Residuals")
+anov = data.frame(anov)
+anov <- flextable(anov,col_keys = c("Predictors","Df", "Sum.Sq", "Mean.Sq", "F.value","Pr..F.")) %>%
+  hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
+  hline_bottom(border = fp_border(color="black", width = .5))%>%
+  width(j = 1, width = 3, unit = "cm")%>%
+  align(align = "center", part = "all")%>%
+  align(j = 1, align = "left", part = "all")%>%
+  colformat_double(digits = 1, na_str = "N/A")%>%
+  set_formatter(values = list("Pr..F." = p_val_format) )%>% 
+  font(fontname = "+font-family: Arial;")%>%
+  font(fontname = "+font-family: Arial;", part = "header")%>%
+  
+  fontsize(size = 10.5, part = "header")%>% 
+  fontsize(size = 10.5)%>%
+  bold(j = "Pr..F.", bold = TRUE)%>%
+  italic(italic = TRUE, part = "header")%>%
+  line_spacing(space = 1, part = "body")%>%
+  line_spacing(space = .5, part = "header")
+
+anov
+
+
+save_as_image(anov,"anov_UNSIGNED_BIAS_POB_ROVED.png")
+
+# tab_model(m.RangeRate,file="plot.html")
+tab_model(m.RelativBias, wrap.labels = 80,
+          auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Unsigned bias",
+          show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
+          CSS = list(css.table = '+font-family: Arial;'),
+          pred.labels = c("Intercept","Condition (Floor level)"),
+          file = "plote.html")
+
+
+webshot("plote.html","Summary_UNSIGNED_BIAS_POB_ROVED.png", vwidth = 600, vheight = 100)
+
+
