@@ -1,0 +1,631 @@
+---
+title: "Piceda et al. 2023 - Elevation as an Auditory Cue for Distance Perception"
+output: pdf_document
+date: "2024-03-04"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(Routliers)
+library(lme4)
+library(nlme)
+library(sjPlot)
+library(MuMIn)
+library(lmerTest)
+library(jtools)
+library(gdtools)
+library(broom)
+library(ggstatsplot)
+library(modelsummary)
+library(ggpubr)
+library(flextable)
+library(webshot)
+library(officer)
+```
+
+## Data entry
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+rm(list=ls())
+results_tbl <- read.csv("./DatosUnificados/Dresults.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
+
+```
+
+## Analysis outliers
+
+You can also embed plots, for example:
+
+```{r outliers, echo=FALSE}
+tabla.ind.Eye <- results_tbl %>% 
+  filter(condition == "Ear level", type == "NORMAL") %>% 
+  group_by(subject,condition) %>%
+  summarise(mBiasUnsigned  = mean(rel_bias_unsigned ,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Eye$mBiasUnsigned,threshold = 3 ,na.rm=TRUE)
+plot_outliers_mad(res3,x=tabla.ind.Eye$mBiasUnsigned,pos_display=TRUE)
+tabla.ind.Eye[res3$outliers_pos,] 
+
+tabla.ind.Floor <- results_tbl %>% 
+  filter(condition == "Floor level", type == "NORMAL") %>% 
+  group_by(subject,condition) %>%
+  summarise(mBiasUnsigned  = mean(rel_bias_unsigned,threshold = 3 ,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Floor$mBiasUnsigned ,na.rm=TRUE)
+plot_outliers_mad(res3,x=tabla.ind.Floor$mBiasUnsigned,pos_display=TRUE)
+tabla.ind.Floor[res3$outliers_pos,]
+
+idx = results_tbl$subject == "S001"
+results_tbl = results_tbl[!idx,]
+idx = results_tbl$subject == "S003"
+results_tbl = results_tbl[!idx,]
+
+rm("res3", "tabla.ind.Floor", "tabla.ind.Eye")
+
+
+```
+
+
+## Analysis perceived distance LINEAL
+
+You can also embed plots, for example:
+
+```{r PADlineal, echo=FALSE}
+#NORMAL ----
+results_tbl = droplevels(results_tbl)
+results_tbl$slope = 0
+results_tbl$intercepto = 0
+fig_normal = list()
+for (i in 1:length(levels(results_tbl$subject))) {
+  print(i)
+  sub = levels(results_tbl$subject)[i]
+  print(sub)
+  m.pend = lm(perc_dist ~ target_distance*condition,
+              data = filter(results_tbl,type == "NORMAL", subject == sub))
+  
+  results_tbl[(results_tbl$type == "NORMAL" & results_tbl$subject == sub &results_tbl$condition == "Ear level"),]$slope = m.pend$coefficients[[2]]
+  results_tbl[(results_tbl$type == "NORMAL" & results_tbl$subject == sub &results_tbl$condition == "Floor level"),]$slope = m.pend$coefficients[[2]]+m.pend$coefficients[[4]]
+  results_tbl[(results_tbl$type == "NORMAL" & results_tbl$subject == sub &results_tbl$condition == "Ear level"),]$intercepto = m.pend$coefficients[[1]]
+  results_tbl[(results_tbl$type == "NORMAL" & results_tbl$subject == sub &results_tbl$condition == "Floor level"),]$intercepto = m.pend$coefficients[[1]]+m.pend$coefficients[[3]]
+  
+  cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
+  
+  
+  eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
+                    list(a = round(m.pend$coefficients[[2]],digits = 2),
+                         b = round(m.pend$coefficients[[1]], digits = 2)))
+  eq2 <- substitute("Floor level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
+                    list(a = round(m.pend$coefficients[[2]]+m.pend$coefficients[[4]], digits = 2),
+                         b = round(m.pend$coefficients[[1]]+m.pend$coefficients[[3]], digits = 2)))
+  eq3 <- substitute("r.squared:"~~~italic(R)^italic(2) == italic(b), 
+                    list(b = round(summary(m.pend)$r.squared, digits = 2)))
+  
+  fig1 = ggplot(filter(results_tbl,type == "NORMAL", subject == sub), 
+                aes(x = target_distance, y = perc_dist, ymin = perc_dist-perc_dist_sem, ymax = perc_dist+perc_dist_sem, 
+                    colour = condition, fill = condition, group = condition))+
+    geom_pointrange(alpha = 0.4, 
+                    position = position_jitterdodge(jitter.width = .1,
+                                                    jitter.height = 0,
+                                                    dodge.width = .1 ))+
+    scale_colour_manual(values = cbPalette) + 
+    scale_fill_manual(values = cbPalette) + 
+    geom_abline(slope = 1, 
+                intercept = 0, 
+                alpha = 0.5, 
+                linetype = "dashed") +
+    geom_abline(slope = m.pend$coefficients[[2]], 
+                intercept = m.pend$coefficients[[1]], 
+                alpha = 0.5,
+                color = "#000000") +
+    geom_abline(slope = m.pend$coefficients[[2]]+m.pend$coefficients[[4]], 
+                intercept = m.pend$coefficients[[1]]+m.pend$coefficients[[3]], 
+                alpha = 0.5,
+                color = "#E69F00") +
+    geom_text(x = 0.2, y = 7.6, label = sub, hjust = 0, nudge_x =  0, parse = TRUE, size = 3.2, color = "#999999")+
+    geom_text(x = 0.2, y = 6.6, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 3.2, color = "#000000")+
+    geom_text(x = 0.2, y = 5.6, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 3.2, color = "#E69F00")+
+    geom_text(x = 0.2, y = 4.6, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 3.2, color = "#009E73")+
+    scale_x_continuous(name="Distance source (m)", limits = c(0,8)) +
+    scale_y_continuous(name="Perceived distance (m)",   limits = c(0,8)) +
+    theme_pubr(base_size = 12, margin = TRUE)+
+    theme(legend.position = "top",
+          legend.title = element_blank())
+  fig_normal[[i]] = fig1
+  
+}
+
+Figure1 = ggarrange(fig_normal[[1]],fig_normal[[2]],fig_normal[[3]],fig_normal[[4]],fig_normal[[5]],fig_normal[[6]],fig_normal[[7]],fig_normal[[8]],fig_normal[[9]],
+                    fig_normal[[10]],fig_normal[[11]],fig_normal[[12]],fig_normal[[13]],fig_normal[[14]],fig_normal[[15]],fig_normal[[16]],fig_normal[[17]],fig_normal[[18]],
+                    fig_normal[[19]],fig_normal[[20]],
+                    ncol = 4, nrow = 6,
+                    common.legend = TRUE, legend="top", align = "hv")
+Figure1
+
+
+# ROVED ----
+fig_roved = list()
+for (i in 1:length(levels(results_tbl$subject))) {
+  print(i)
+  sub = levels(results_tbl$subject)[i]
+  print(sub)
+  m.pend = lm(perc_dist ~ target_distance*condition,
+              data = filter(results_tbl,type == "ROVED", subject == sub))
+  
+  results_tbl[(results_tbl$type == "ROVED" & results_tbl$subject == sub &results_tbl$condition == "Ear level"),]$slope = m.pend$coefficients[[2]]
+  results_tbl[(results_tbl$type == "ROVED" & results_tbl$subject == sub &results_tbl$condition == "Floor level"),]$slope = m.pend$coefficients[[2]]+m.pend$coefficients[[4]]
+  results_tbl[(results_tbl$type == "ROVED" & results_tbl$subject == sub &results_tbl$condition == "Ear level"),]$intercepto = m.pend$coefficients[[1]]
+  results_tbl[(results_tbl$type == "ROVED" & results_tbl$subject == sub &results_tbl$condition == "Floor level"),]$intercepto = m.pend$coefficients[[1]]+m.pend$coefficients[[3]]
+  
+  
+  cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
+  
+  
+  eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
+                    list(a = round(m.pend$coefficients[[2]],digits = 2),
+                         b = round(m.pend$coefficients[[1]], digits = 2)))
+  eq2 <- substitute("Floor level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
+                    list(a = round(m.pend$coefficients[[2]]+m.pend$coefficients[[4]], digits = 2),
+                         b = round(m.pend$coefficients[[1]]+m.pend$coefficients[[3]], digits = 2)))
+  eq3 <- substitute("r.squared:"~~~italic(R)^italic(2) == italic(b), 
+                    list(b = round(summary(m.pend)$r.squared, digits = 2)))
+  
+  fig2 = ggplot(filter(results_tbl,type == "ROVED", subject == sub), 
+                aes(x = target_distance, y = perc_dist, ymin = perc_dist-perc_dist_sem, ymax = perc_dist+perc_dist_sem, 
+                    colour = condition, fill = condition, group = condition))+
+    geom_pointrange(alpha = 0.4, 
+                    position = position_jitterdodge(jitter.width = .1,
+                                                    jitter.height = 0,
+                                                    dodge.width = .1 ))+
+    scale_colour_manual(values = cbPalette) + 
+    scale_fill_manual(values = cbPalette) + 
+    geom_abline(slope = 1, 
+                intercept = 0, 
+                alpha = 0.5, 
+                linetype = "dashed") +
+    geom_abline(slope = m.pend$coefficients[[2]], 
+                intercept = m.pend$coefficients[[1]], 
+                alpha = 0.5,
+                color = "#000000") +
+    geom_abline(slope = m.pend$coefficients[[2]]+m.pend$coefficients[[4]], 
+                intercept = m.pend$coefficients[[1]]+m.pend$coefficients[[3]], 
+                alpha = 0.5,
+                color = "#E69F00") +
+    geom_text(x = 0.2, y = 7.6, label = sub, hjust = 0, nudge_x =  0, parse = TRUE, size = 3.2, color = "#999999")+
+    geom_text(x = 0.2, y = 6.6, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 3.2, color = "#000000")+
+    geom_text(x = 0.2, y = 5.6, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 3.2, color = "#E69F00")+
+    geom_text(x = 0.2, y = 4.6, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 3.2, color = "#009E73")+
+    scale_x_continuous(name="Distance source (m)", limits = c(0,8)) +
+    scale_y_continuous(name="Perceived distance (m)",   limits = c(0,8)) +
+    theme_pubr(base_size = 12, margin = TRUE)+
+    theme(legend.position = "top",
+          legend.title = element_blank())
+  fig_roved[[i]] = fig2
+  
+}
+
+Figure2 = ggarrange(fig_roved[[1]],fig_roved[[2]],fig_roved[[3]],fig_roved[[4]],fig_roved[[5]],fig_roved[[6]],fig_roved[[7]],fig_roved[[8]],fig_roved[[9]],
+                    fig_roved[[10]],fig_roved[[11]],fig_roved[[12]],fig_roved[[13]],fig_roved[[14]],fig_roved[[15]],fig_roved[[16]],fig_roved[[17]],fig_roved[[18]],
+                    fig_roved[[19]],fig_roved[[20]],
+                    ncol = 4, nrow = 6,
+                    common.legend = TRUE, legend="top", align = "hv")
+Figure2
+
+
+
+```
+
+
+## Analysis perceived distance LOG
+
+You can also embed plots, for example:
+
+```{r PADLog, echo=FALSE}
+#NORMAL ----
+results_tbl = droplevels(results_tbl)
+results_tbl$slopeLog = 0
+results_tbl$interceptoLog = 0
+fig_normal = list()
+for (i in 1:length(levels(results_tbl$subject))) {
+  print(i)
+  sub = levels(results_tbl$subject)[i]
+  print(sub)
+  m.pend = lm(log10(perc_dist) ~ log10(target_distance)*condition,
+              data = filter(results_tbl,type == "NORMAL", subject == sub))
+  
+  results_tbl[(results_tbl$type == "NORMAL" & results_tbl$subject == sub &results_tbl$condition == "Ear level"),]$slopeLog = m.pend$coefficients[[2]]
+  results_tbl[(results_tbl$type == "NORMAL" & results_tbl$subject == sub &results_tbl$condition == "Floor level"),]$slopeLog = m.pend$coefficients[[2]]+m.pend$coefficients[[4]]
+  results_tbl[(results_tbl$type == "NORMAL" & results_tbl$subject == sub &results_tbl$condition == "Ear level"),]$interceptoLog = m.pend$coefficients[[1]]
+  results_tbl[(results_tbl$type == "NORMAL" & results_tbl$subject == sub &results_tbl$condition == "Floor level"),]$interceptoLog = m.pend$coefficients[[1]]+m.pend$coefficients[[3]]
+  
+  cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
+  
+  x1 = seq(0,8,by=.01)
+  curves1 = data.frame(x2 = x1,
+             y1 = (10^(m.pend$coefficients[[1]]))*(x1^m.pend$coefficients[[2]]),
+             condition = "Ear level")
+  curves2 = data.frame(x2 = x1,
+                      y1 = 10^(m.pend$coefficients[[1]]+m.pend$coefficients[[3]])*(x1^(m.pend$coefficients[[2]]+m.pend$coefficients[[4]])),
+                      condition = "Floor level")
+  curve = merge(x = curves1, y = curves2, all = TRUE)
+
+  eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)^italic((b)), 
+                    list(a = round(10^(m.pend$coefficients[[1]]),digits = 2),
+                         b = round(m.pend$coefficients[[2]], digits = 2)))
+  eq2 <- substitute("Floor level:"~~~italic(y) == a %.% italic(X)^italic((b)), 
+                    list(a = round(10^(m.pend$coefficients[[1]]+m.pend$coefficients[[3]]), digits = 2),
+                         b = round(m.pend$coefficients[[2]]+m.pend$coefficients[[4]], digits = 2)))
+  eq3 <- substitute("r.squared:"~~~italic(R)^italic(2) == italic(b), 
+                    list(b = round(summary(m.pend)$r.squared, digits = 2)))
+  
+  fig1 = ggplot(filter(results_tbl,type == "NORMAL", subject == sub), 
+                aes(x = target_distance, y = perc_dist,
+                    colour = condition, fill = condition, group = condition))+
+    geom_pointrange(aes(x = target_distance, y = perc_dist, ymin = perc_dist-perc_dist_sem, ymax = perc_dist+perc_dist_sem),alpha = 0.4, 
+                    position = position_jitterdodge(jitter.width = .1,
+                                                    jitter.height = 0,
+                                                    dodge.width = .1 ))+
+    geom_line(data = curve, mapping = aes(x = x2, y = y1, colour = condition))+
+    scale_colour_manual(values = cbPalette) + 
+    scale_fill_manual(values = cbPalette) + 
+    geom_abline(slope = 1, 
+                intercept = 0, 
+                alpha = 0.5, 
+                linetype = "dashed") +
+    geom_text(x = 0.2, y = 7.6, label = sub, hjust = 0, nudge_x =  0, parse = TRUE, size =  2.6, color = "#999999")+
+    geom_text(x = 0.2, y = 6.6, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 2.6, color = "#000000")+
+    geom_text(x = 0.2, y = 5.6, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 2.6, color = "#E69F00")+
+    geom_text(x = 0.2, y = 4.6, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 2.6, color = "#009E73")+
+    scale_x_continuous(name="Distance source (m)", limits = c(0,8)) +
+    scale_y_continuous(name="Perceived distance (m)",   limits = c(0,8)) +
+    theme_pubr(base_size = 10, margin = TRUE)+
+    theme(legend.position = "top",
+          legend.title = element_blank())
+  fig1
+  
+  fig_normal[[i]] = fig1
+  graphics.off()
+  earlevel = 0
+  rm("earlevel", "floorlevel")
+}
+
+Figure1 = ggarrange(fig_normal[[1]],fig_normal[[2]],fig_normal[[3]],fig_normal[[4]],fig_normal[[5]],fig_normal[[6]],fig_normal[[7]],fig_normal[[8]],fig_normal[[9]],
+                    fig_normal[[10]],fig_normal[[11]],fig_normal[[12]],fig_normal[[13]],fig_normal[[14]],fig_normal[[15]],fig_normal[[16]],fig_normal[[17]],fig_normal[[18]],
+                    fig_normal[[19]],fig_normal[[20]],
+                    ncol = 4, nrow = 6,
+                    common.legend = TRUE, legend="top", align = "hv")
+Figure1
+
+# ROVED ----
+fig_ROVED = list()
+for (i in 1:length(levels(results_tbl$subject))) {
+  print(i)
+  sub = levels(results_tbl$subject)[i]
+  print(sub)
+  m.pend = lm(log10(perc_dist) ~ log10(target_distance)*condition,
+              data = filter(results_tbl,type == "ROVED", subject == sub))
+  
+  results_tbl[(results_tbl$type == "ROVED" & results_tbl$subject == sub &results_tbl$condition == "Ear level"),]$slopeLog = m.pend$coefficients[[2]]
+  results_tbl[(results_tbl$type == "ROVED" & results_tbl$subject == sub &results_tbl$condition == "Floor level"),]$slopeLog = m.pend$coefficients[[2]]+m.pend$coefficients[[4]]
+  results_tbl[(results_tbl$type == "ROVED" & results_tbl$subject == sub &results_tbl$condition == "Ear level"),]$interceptoLog = m.pend$coefficients[[1]]
+  results_tbl[(results_tbl$type == "ROVED" & results_tbl$subject == sub &results_tbl$condition == "Floor level"),]$interceptoLog = m.pend$coefficients[[1]]+m.pend$coefficients[[3]]
+  
+  cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
+  
+
+  x1 = seq(0,8,by=.01)
+  curves1 = data.frame(x2 = x1,
+                       y1 = (10^(m.pend$coefficients[[1]]))*(x1^m.pend$coefficients[[2]]),
+                       condition = "Ear level")
+  curves2 = data.frame(x2 = x1,
+                       y1 = 10^(m.pend$coefficients[[1]]+m.pend$coefficients[[3]])*(x1^(m.pend$coefficients[[2]]+m.pend$coefficients[[4]])),
+                       condition = "Floor level")
+  curve = merge(x = curves1, y = curves2, all = TRUE)
+
+  eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)^italic((b)), 
+                    list(a = round(10^(m.pend$coefficients[[1]]),digits = 2),
+                         b = round(m.pend$coefficients[[2]], digits = 2)))
+  eq2 <- substitute("Floor level:"~~~italic(y) == a %.% italic(X)^italic((b)), 
+                    list(a = round(10^(m.pend$coefficients[[1]]+m.pend$coefficients[[3]]), digits = 2),
+                         b = round(m.pend$coefficients[[2]]+m.pend$coefficients[[4]], digits = 2)))
+  eq3 <- substitute("r.squared:"~~~italic(R)^italic(2) == italic(b), 
+                    list(b = round(summary(m.pend)$r.squared, digits = 2)))
+  
+  fig1 = ggplot(filter(results_tbl,type == "ROVED", subject == sub), 
+                aes(x = target_distance, y = perc_dist,
+                    colour = condition, fill = condition, group = condition))+
+    geom_pointrange(aes(x = target_distance, y = perc_dist, ymin = perc_dist-perc_dist_sem, ymax = perc_dist+perc_dist_sem),alpha = 0.4, 
+                    position = position_jitterdodge(jitter.width = .1,
+                                                    jitter.height = 0,
+                                                    dodge.width = .1 ))+
+    geom_line(data = curve, mapping = aes(x = x2, y = y1, colour = condition))+
+    scale_colour_manual(values = cbPalette) + 
+    scale_fill_manual(values = cbPalette) + 
+    geom_abline(slope = 1, 
+                intercept = 0, 
+                alpha = 0.5, 
+                linetype = "dashed") +
+    
+    geom_text(x = 0.2, y = 7.6, label = sub, hjust = 0, nudge_x =  0, parse = TRUE, size = 2.6, color = "#999999")+
+    geom_text(x = 0.2, y = 6.6, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 2.6, color = "#000000")+
+    geom_text(x = 0.2, y = 5.6, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 2.6, color = "#E69F00")+
+    geom_text(x = 0.2, y = 4.6, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 2.6, color = "#009E73")+
+    scale_x_continuous(name="Distance source (m)", limits = c(0,8)) +
+    scale_y_continuous(name="Perceived distance (m)",   limits = c(0,8)) +
+    theme_pubr(base_size = 10, margin = TRUE)+
+    theme(legend.position = "top",
+          legend.title = element_blank())
+  fig1
+  
+  fig_ROVED[[i]] = fig1
+  graphics.off()
+  earlevel = 0
+  rm("earlevel", "floorlevel")
+}
+
+Figure2 = ggarrange(fig_ROVED[[1]],fig_ROVED[[2]],fig_ROVED[[3]],fig_ROVED[[4]],fig_ROVED[[5]],fig_ROVED[[6]],fig_ROVED[[7]],fig_ROVED[[8]],fig_ROVED[[9]],
+                    fig_ROVED[[10]],fig_ROVED[[11]],fig_ROVED[[12]],fig_ROVED[[13]],fig_ROVED[[14]],fig_ROVED[[15]],fig_ROVED[[16]],fig_ROVED[[17]],fig_ROVED[[18]],
+                    fig_ROVED[[19]],fig_ROVED[[20]],
+                    ncol = 4, nrow = 6,
+                    common.legend = TRUE, legend="top", align = "hv")
+Figure2
+
+
+```
+
+
+## Analysis perceived distance MEAN (LMEM)
+
+You can also embed plots, for example:
+
+```{r PADMEAN, echo=FALSE}
+m.Dist1 <-  lmer(log10(perc_dist) ~ log10(target_distance)*condition+(log10(target_distance)|subject),
+                 data = filter(results_tbl,type == "NORMAL"))
+extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+
+anova(m.Dist1)
+anov1 = anova(m.Dist1)
+
+
+p_val_format <- function(x){
+  z <- scales::pvalue_format()(x)
+  z[!is.finite(x)] <- ""
+  z
+}
+anov1$Predictors = c("Target distance","Condition","Target distance:Condition")
+anov1 = data.frame(anov1)
+anov1 <- flextable(anov1,col_keys = c("Predictors","NumDF","DenDF", "F.value","Pr..F.")) %>%
+  hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
+  hline_bottom(border = fp_border(color="black", width = .5))%>%
+  width(j = 1, width = 5, unit = "cm")%>%
+  align(align = "center", part = "all")%>%
+  align(j = 1, align = "left", part = "all")%>%
+  colformat_double(digits = 1, na_str = "N/A")%>%
+  set_formatter(values = list("Pr..F." = p_val_format) )%>% 
+  font(fontname = "+font-family: Arial;")%>%
+  font(fontname = "+font-family: Arial;", part = "header")%>%
+  
+  fontsize(size = 10.5, part = "header")%>% 
+  fontsize(size = 10.5)%>%
+  bold(j = "Pr..F.", bold = TRUE)%>%
+  italic(italic = TRUE, part = "header")%>%
+  line_spacing(space = 1, part = "body")%>%
+  line_spacing(space = .5, part = "header")
+anov1
+
+
+tab_model(m.Dist1, wrap.labels = 80,
+          auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Perceived distance",
+          show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
+          CSS = list(css.table = '+font-family: Arial;'),
+          pred.labels = c("Intercept","Target distance", "Condition (Floor level)","Target distance * Condition (Floor level)"),
+          file = "plot.html")
+
+
+
+
+
+
+
+m.Dist1 <-  lme(log10(perc_dist) ~ log10(target_distance)*condition, random = ~log10(target_distance)|subject,
+                method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
+                data = filter(results_tbl,type == "NORMAL"))
+extract_stats(ggcoefstats(m.Dist1))
+anova(m.Dist1)
+
+eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)^italic((b)), 
+                  list(a = round(10^(m.Dist1$coefficients$fixed[[1]]),digits = 2),
+                       b = round(m.Dist1$coefficients$fixed[[2]], digits = 2)))
+eq2 <- substitute("Floor level:"~~~italic(y) == a %.% italic(X)^italic((b)), 
+                  list(a = round(10^(m.Dist1$coefficients$fixed[[1]]+m.Dist1$coefficients$fixed[[3]]), digits = 2),
+                       b = round(m.Dist1$coefficients$fixed[[2]]+m.Dist1$coefficients$fixed[[4]], digits = 2)))
+eq3 <- substitute("r.squared:"~~~italic(R)^italic(2) == italic(b), 
+                  list(b = round(r.squaredGLMM(m.Dist1)[2], digits = 2)))
+
+tabla.pob = filter(results_tbl,type == "NORMAL") %>% group_by(target_distance,condition) %>%
+  summarise(Mperc_dist  = mean(perc_dist),
+            SDperc_dist = sd(perc_dist)/sqrt(n()))  %>%
+  ungroup()
+
+x1 = seq(0,8,by=.01)
+curves1 = data.frame(x2 = x1,
+                     y1 = (10^(m.Dist1$coefficients$fixed[[1]]))*(x1^m.Dist1$coefficients$fixed[[2]]),
+                     condition = "Ear level")
+curves2 = data.frame(x2 = x1,
+                     y1 = 10^(m.Dist1$coefficients$fixed[[1]]+m.Dist1$coefficients$fixed[[3]])*(x1^(m.Dist1$coefficients$fixed[[2]]+m.Dist1$coefficients$fixed[[4]])),
+                     condition = "Floor level")
+curve = merge(x = curves1, y = curves2, all = TRUE)
+
+f1 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition, color  = condition)) + 
+  geom_pointrange(aes(x = target_distance, y = Mperc_dist, ymin = Mperc_dist-SDperc_dist, ymax = Mperc_dist+SDperc_dist),alpha = 1, 
+                  position = position_jitterdodge(jitter.width = .1,
+                                                  jitter.height = 0,
+                                                  dodge.width = .1 ))+
+  geom_abline(intercept = 0, slope = 1, linetype=2) +
+  geom_line(data = curve, mapping = aes(x = x2, y = y1, colour = condition))+
+  scale_colour_manual(values = cbPalette) + 
+  scale_fill_manual(values = cbPalette) + 
+
+  geom_text(x = 0.2, y = 7.1, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#000000")+
+  geom_text(x = 0.2, y = 6.7, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 4, color = "#E69F00")+
+  geom_text(x = 0.2, y = 6.3, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#009E73")+
+  scale_x_continuous(name="Distance source (m)", limits = c(0,8)) +
+  scale_y_continuous(name="Perceived distance (m)",   limits = c(0,8)) +
+  theme_pubr(base_size = 12, margin = TRUE)+
+  theme(legend.position = "top",
+        legend.title = element_blank())
+
+f1
+
+
+# ROVED
+
+m.Dist1 <-  lmer(log10(perc_dist) ~ log10(target_distance)*condition+(log10(target_distance)|subject),
+                 data = filter(results_tbl,type == "ROVED"))
+extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+
+anova(m.Dist1)
+anov1 = anova(m.Dist1)
+
+
+p_val_format <- function(x){
+  z <- scales::pvalue_format()(x)
+  z[!is.finite(x)] <- ""
+  z
+}
+anov1$Predictors = c("Target distance","Condition","Target distance:Condition")
+anov1 = data.frame(anov1)
+anov1 <- flextable(anov1,col_keys = c("Predictors","NumDF","DenDF", "F.value","Pr..F.")) %>%
+  hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
+  hline_bottom(border = fp_border(color="black", width = .5))%>%
+  width(j = 1, width = 5, unit = "cm")%>%
+  align(align = "center", part = "all")%>%
+  align(j = 1, align = "left", part = "all")%>%
+  colformat_double(digits = 1, na_str = "N/A")%>%
+  set_formatter(values = list("Pr..F." = p_val_format) )%>% 
+  font(fontname = "+font-family: Arial;")%>%
+  font(fontname = "+font-family: Arial;", part = "header")%>%
+  
+  fontsize(size = 10.5, part = "header")%>% 
+  fontsize(size = 10.5)%>%
+  bold(j = "Pr..F.", bold = TRUE)%>%
+  italic(italic = TRUE, part = "header")%>%
+  line_spacing(space = 1, part = "body")%>%
+  line_spacing(space = .5, part = "header")
+anov1
+
+
+
+
+tab_model(m.Dist1, wrap.labels = 80,
+          auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Perceived distance",
+          show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
+          CSS = list(css.table = '+font-family: Arial;'),
+          pred.labels = c("Intercept","Target distance", "Condition (Floor level)","Target distance * Condition (Floor level)"),
+          file = "plot.html")
+
+
+
+m.Dist1 <-  lme(log10(perc_dist) ~ log10(target_distance)*condition, random = ~log10(target_distance)|subject,
+                method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
+                data = filter(results_tbl,type == "ROVED"))
+extract_stats(ggcoefstats(m.Dist1))
+anova(m.Dist1)
+
+eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)^italic((b)), 
+                  list(a = round(10^(m.Dist1$coefficients$fixed[[1]]),digits = 2),
+                       b = round(m.Dist1$coefficients$fixed[[2]], digits = 2)))
+eq2 <- substitute("Floor level:"~~~italic(y) == a %.% italic(X)^italic((b)), 
+                  list(a = round(10^(m.Dist1$coefficients$fixed[[1]]+m.Dist1$coefficients$fixed[[3]]), digits = 2),
+                       b = round(m.Dist1$coefficients$fixed[[2]]+m.Dist1$coefficients$fixed[[4]], digits = 2)))
+eq3 <- substitute("r.squared:"~~~italic(R)^italic(2) == italic(b), 
+                  list(b = round(r.squaredGLMM(m.Dist1)[2], digits = 2)))
+
+tabla.pob = filter(results_tbl,type == "ROVED") %>% group_by(target_distance,condition) %>%
+  summarise(Mperc_dist  = mean(perc_dist),
+            SDperc_dist = sd(perc_dist)/sqrt(n()))  %>%
+  ungroup()
+
+x1 = seq(0,8,by=.01)
+curves1 = data.frame(x2 = x1,
+                     y1 = (10^(m.Dist1$coefficients$fixed[[1]]))*(x1^m.Dist1$coefficients$fixed[[2]]),
+                     condition = "Ear level")
+curves2 = data.frame(x2 = x1,
+                     y1 = 10^(m.Dist1$coefficients$fixed[[1]]+m.Dist1$coefficients$fixed[[3]])*(x1^(m.Dist1$coefficients$fixed[[2]]+m.Dist1$coefficients$fixed[[4]])),
+                     condition = "Floor level")
+curve = merge(x = curves1, y = curves2, all = TRUE)
+
+f4 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition, color  = condition)) + 
+  geom_pointrange(aes(x = target_distance, y = Mperc_dist, ymin = Mperc_dist-SDperc_dist, ymax = Mperc_dist+SDperc_dist),alpha = 1, 
+                  position = position_jitterdodge(jitter.width = .1,
+                                                  jitter.height = 0,
+                                                  dodge.width = .1 ))+
+  geom_abline(intercept = 0, slope = 1, linetype=2) +
+  geom_line(data = curve, mapping = aes(x = x2, y = y1, colour = condition))+
+  scale_colour_manual(values = cbPalette) + 
+  scale_fill_manual(values = cbPalette) + 
+  geom_text(x = 0.2, y = 7.1, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#000000")+
+  geom_text(x = 0.2, y = 6.7, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 4, color = "#E69F00")+
+  geom_text(x = 0.2, y = 6.3, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#009E73")+
+  scale_x_continuous(name="Distance source (m)", limits = c(0,8)) +
+  scale_y_continuous(name="Perceived distance (m)",   limits = c(0,8)) +
+  theme_pubr(base_size = 12, margin = TRUE)+
+  theme(legend.position = "top",
+        legend.title = element_blank())
+
+f4
+
+
+```
+
+## Analysis outliers
+
+You can also embed plots, for example:
+
+```{r a, echo=FALSE}
+
+
+```
+
+## Analysis outliers
+
+You can also embed plots, for example:
+
+```{r b, echo=FALSE}
+
+
+```
+
+
+## Analysis outliers
+
+You can also embed plots, for example:
+
+```{r c, echo=FALSE}
+
+
+```
+
+## Analysis outliers
+
+You can also embed plots, for example:
+
+```{r d, echo=FALSE}
+
+
+```
+
+
+## Analysis outliers
+
+You can also embed plots, for example:
+
+```{r e, echo=FALSE}
+
+
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
