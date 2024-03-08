@@ -28,7 +28,7 @@ cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "
 
 
 # Response variability
-## Intra-subject
+## Intra-subject -----
 tabla.ind.var <- filter(results_tbl) %>% 
   group_by(target_distance,condition,type) %>%
   summarise(mSD = mean(perc_dist_sd),
@@ -189,8 +189,174 @@ webshot("plot.html","Summary_DESV_POB_ROVED.png", vwidth = 600, vheight = 100)
 
 
 
+#ENTRE CONDICIONES-----
 
-----
+# Response variability
+## Intra-subject
+tabla.ind.var <- filter(results_tbl) %>% 
+  group_by(target_distance,condition,type) %>%
+  summarise(mSD = mean(perc_dist_sd),
+            SdSd = sd(perc_dist_sd),
+            n = n())  %>%
+  ungroup()
+
+f3 <- ggplot(tabla.ind.var, aes(x=target_distance, y =mSD, group = type, color = type)) + 
+  geom_point()+ 
+  geom_line(size = 1)+
+  scale_colour_manual(values = cbPalette) + 
+  scale_fill_manual(values = cbPalette) + 
+  geom_errorbar(data=tabla.ind.var,alpha = 2, width=0, size=1,
+                mapping=aes(ymin = mSD - (SdSd/sqrt(n)), 
+                            ymax = mSD + (SdSd/sqrt(n)),
+                            color=type))+ 
+  geom_abline(intercept = 0, slope = 0, linetype=2) +
+  facet_grid(.~ condition )+
+  # scale_y_log10(name="Standard deviation (m)\n +/- SEM Intra-subject") +
+  # scale_y_log10(name="Standard deviation (m)\n +/- SEM Intra-subject", breaks=c(0,0.5,1,1.5,2),
+  #               labels=c(0,0.5,1,1.5,2), minor_breaks=NULL, limits = c(-1.1,2)) +
+  # scale_x_log10(name="Distance source (m)",  breaks=c(2,2.9,4.2,6), labels=c(2,2.9,4.2,6), minor_breaks=NULL, limits = c(1.9,6.1)) +
+  scale_y_continuous(name="Standard deviation (m)\n +/- SEM Intra-subject", breaks=c(0,0.5,1,1.5,2),
+                     labels=c(0,0.5,1,1.5,2), minor_breaks=NULL, limits = c(-1.1,2)) +
+  scale_x_continuous(name="Distance source (m)",  breaks=c(2,2.9,4.2,6), labels=c(2,2.9,4.2,6), minor_breaks=NULL, limits = c(1.9,6.1)) +
+  theme_pubr(base_size = 12, margin = TRUE)+
+  theme(legend.position = "top",
+        legend.title = element_blank())
+
+f3
+mi_nombre_de_archivo = paste("figuras", .Platform$file.sep, "12.Intrasujetos Desvio", ".png", sep = '')
+ggsave(mi_nombre_de_archivo, plot=f3, width=15, height=10, units="cm", limitsize=FALSE, dpi=600)
+
+m.Dist1 <-  lme(perc_dist_sd ~ target_distance*condition, random = ~target_distance|subject,
+                method = "ML", control =list(msMaxIter = 1e8, msMaxEval = 1e8),
+                data = filter(results_tbl,condition == "Ear level"))
+
+
+#NORMAL
+m.Dist1 <-  lmer(perc_dist_sd ~ target_distance*type + (target_distance|subject),
+                 data = filter(results_tbl,condition == "Floor level"))
+
+
+extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+
+anova(m.Dist1)
+anov1 = anova(m.Dist1)
+
+
+p_val_format <- function(x){
+  z <- scales::pvalue_format()(x)
+  z[!is.finite(x)] <- ""
+  z
+}
+anov1$Predictors = c("Target distance","Condition","Target distance:Condition")
+anov1 = data.frame(anov1)
+anov1 <- flextable(anov1,col_keys = c("Predictors","NumDF","DenDF", "F.value","Pr..F.")) %>%
+  hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
+  hline_bottom(border = fp_border(color="black", width = .5))%>%
+  width(j = 1, width = 5, unit = "cm")%>%
+  align(align = "center", part = "all")%>%
+  align(j = 1, align = "left", part = "all")%>%
+  colformat_double(digits = 1, na_str = "N/A")%>%
+  set_formatter(values = list("Pr..F." = p_val_format) )%>% 
+  font(fontname = "+font-family: Arial;")%>%
+  font(fontname = "+font-family: Arial;", part = "header")%>%
+  
+  fontsize(size = 10.5, part = "header")%>% 
+  fontsize(size = 10.5)%>%
+  bold(j = "Pr..F.", bold = TRUE)%>%
+  italic(italic = TRUE, part = "header")%>%
+  line_spacing(space = 1, part = "body")%>%
+  line_spacing(space = .5, part = "header")
+anov1
+
+
+save_as_image(anov1,"Anov_DESV_POB_LIN_NORMAL.png")
+
+# tab_model(m.Dist1,file="plot.html")
+tab_model(m.Dist1, wrap.labels = 80,
+          auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Standard deviation",
+          show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
+          CSS = list(css.table = '+font-family: Arial;'),
+          pred.labels = c("Intercept","Target distance", "Condition (Floor level)","Target distance * Condition (Floor level)"),
+          file = "plot.html")
+
+
+webshot("plot.html","Summary_DESV_POB_NORMAL.png", vwidth = 600, vheight = 100)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#ROVED
+
+
+m.Dist1 <-  lmer(perc_dist_sd ~ target_distance*condition + (target_distance|subject),
+                 data = filter(results_tbl,type == "ROVED"))
+
+
+extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+
+anova(m.Dist1)
+anov1 = anova(m.Dist1)
+
+
+p_val_format <- function(x){
+  z <- scales::pvalue_format()(x)
+  z[!is.finite(x)] <- ""
+  z
+}
+anov1$Predictors = c("Target distance","Condition","Target distance:Condition")
+anov1 = data.frame(anov1)
+anov1 <- flextable(anov1,col_keys = c("Predictors","NumDF","DenDF", "F.value","Pr..F.")) %>%
+  hline_top(border = fp_border(color="black", width = .5), part = "all")%>%
+  hline_bottom(border = fp_border(color="black", width = .5))%>%
+  width(j = 1, width = 5, unit = "cm")%>%
+  align(align = "center", part = "all")%>%
+  align(j = 1, align = "left", part = "all")%>%
+  colformat_double(digits = 1, na_str = "N/A")%>%
+  set_formatter(values = list("Pr..F." = p_val_format) )%>% 
+  font(fontname = "+font-family: Arial;")%>%
+  font(fontname = "+font-family: Arial;", part = "header")%>%
+  
+  fontsize(size = 10.5, part = "header")%>% 
+  fontsize(size = 10.5)%>%
+  bold(j = "Pr..F.", bold = TRUE)%>%
+  italic(italic = TRUE, part = "header")%>%
+  line_spacing(space = 1, part = "body")%>%
+  line_spacing(space = .5, part = "header")
+anov1
+
+
+save_as_image(anov1,"Anov_DESV_POB_LIN_ROVED.png")
+
+# tab_model(m.Dist1,file="plot.html")
+tab_model(m.Dist1, wrap.labels = 80,
+          auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Standard deviation",
+          show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
+          CSS = list(css.table = '+font-family: Arial;'),
+          pred.labels = c("Intercept","Target distance", "Condition (Floor level)","Target distance * Condition (Floor level)"),
+          file = "plot.html")
+
+
+webshot("plot.html","Summary_DESV_POB_ROVED.png", vwidth = 600, vheight = 100)
+
+
+
+
+
+
+
+#----
 
 
 # 
