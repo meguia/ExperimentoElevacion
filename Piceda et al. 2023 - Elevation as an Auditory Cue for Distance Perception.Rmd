@@ -31,7 +31,7 @@ When you click the **Knit** button a document will be generated that includes bo
 
 ```{r cars}
 rm(list=ls())
-results_tbl <- read.csv("./DatosUnificados/Dresults.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
+results_tbl <- read.csv("./Dresults.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
 
 ```
 
