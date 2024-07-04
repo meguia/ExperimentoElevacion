@@ -1,4 +1,9 @@
 library(tidyverse)
+# library(nlme)
+library(effects)
+
+
+
 library(lme4)
 # library(nlme)
 library(sjPlot)
@@ -39,14 +44,24 @@ cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "
 # anova(m.Dist1)
 # anov = anova(m.Dist1)
 
-m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(target_distance|subject),
-                data = filter(results_tbl,type == "NORMAL"))
+
+m.Dist1 <-  lmer(perc_dist ~ target_distance*condition++(1+target_distance|subject)+(0+condition|subject),
+                 data = filter(results_tbl,type == "NORMAL"))
 extract_stats(ggcoefstats(m.Dist1))
 r.squaredGLMM(m.Dist1)
 
 anova(m.Dist1)
 anov1 = anova(m.Dist1)
 
+# m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(target_distance|subject),
+#                 data = filter(results_tbl,type == "NORMAL"))
+# extract_stats(ggcoefstats(m.Dist1))
+# r.squaredGLMM(m.Dist1)
+# 
+# anova(m.Dist1)
+# anov2 = anova(m.Dist1)
+
+###Tabla estimadores ----
 
 p_val_format <- function(x){
   z <- scales::pvalue_format()(x)
@@ -76,8 +91,8 @@ anov1
   
 
 save_as_image(anov1,"Anov_PAD_POB_NORMAL_LIN.png")
-
-# tab_model(m.Dist1,file="plot.html")
+###Tabla anova -----
+#tab_model(m.Dist1,file="plot.html")
 tab_model(m.Dist1, wrap.labels = 80,
               auto.label = FALSE, show.stat = TRUE, string.p = "p.value", string.ci = "CI 95%", dv.labels = "Perceived distance",
               show.intercept = TRUE, show.aic = FALSE, show.zeroinf = TRUE, show.re.var = FALSE, show.reflvl = TRUE,
@@ -88,6 +103,21 @@ tab_model(m.Dist1, wrap.labels = 80,
 
 webshot("plot.html","Summary_PAD_POB_NORMAL_LIN.png", vwidth = 600, vheight = 100)
 
+
+###Grafico ----
+
+# Final.Fixed<-effect(c("target_distance*condition"), m.Dist1)
+# Final.Fixed<-as.data.frame(Final.Fixed)
+# 
+# HappyData = filter(results_tbl,type == "NORMAL")
+# HappyData$Model.5.fitted<-predict(m.Dist1)
+# FittedlmPlot5 <-ggplot()+
+#   facet_grid(subject ~ Social, labeller=label_both)+
+#   geom_line(data = HappyData, aes(x = target_distance, y =Model.5.fitted))+
+#   geom_point(data = HappyData, aes(x = target_distance, y =perc_dist, group=subject,colour = subject), size=3)+
+#   #  coord_cartesian(ylim = c(.03,.074))+ 
+#   xlab("Time Step")+ylab("Happiness")
+# FittedlmPlot5
 
 
 m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance|subject,

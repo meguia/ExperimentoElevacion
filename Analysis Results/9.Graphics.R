@@ -62,7 +62,19 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition,
         legend.title = element_blank())
 
 f1
-#Slope normal
+
+# Slope ----
+# m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance|subject,
+#                 method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
+#                 data = filter(results_tbl,type == "NORMAL"))
+
+m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(1+target_distance|subject)+(0+condition|subject),
+                 data = filter(results_tbl,type == "NORMAL"))
+extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+
+anova(m.Dist1)
+
 results_tblp <- filter(results_tbl,type == "NORMAL") %>% 
   group_by(condition) %>%
   summarise(mslope  = mean(slope,na.rm=TRUE),
@@ -256,6 +268,8 @@ f5 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition,
 
 f5
 #Slope ROVED
+
+
 results_tblp <- filter(results_tbl,type == "ROVED") %>% 
   group_by(condition) %>%
   summarise(mslope  = mean(slope,na.rm=TRUE),
