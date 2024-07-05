@@ -7,6 +7,16 @@ library(ggstatsplot)
 library(ggpubr)
 library(ggpp)
 library(PupillometryR)
+library(effects)
+library(lmerTest)
+library(jtools)
+library(gdtools)
+library(broom)
+library(modelsummary)
+library(flextable)
+library(webshot)
+library(officer)
+library(lattice)
 
 rm(list=ls())
 figures_folder = "figuras"
@@ -72,8 +82,10 @@ m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(1+target_distance|subjec
                  data = filter(results_tbl,type == "NORMAL"))
 extract_stats(ggcoefstats(m.Dist1))
 r.squaredGLMM(m.Dist1)
-
 anova(m.Dist1)
+
+coefmodelpob = fixef(m.Dist1)
+coefmodelind = ranef(m.Dist1)
 
 results_tblp <- filter(results_tbl,type == "NORMAL") %>% 
   group_by(condition) %>%
