@@ -37,21 +37,21 @@ cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "
 #LINEAL ----
 #NORMAL
 
-# m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance|subject,
-#                 method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
-#                 data = filter(results_tbl,type == "NORMAL"))
-# extract_stats(ggcoefstats(m.Dist1))
-# anova(m.Dist1)
-# anov = anova(m.Dist1)
-
-
-m.Dist1 <-  lmer(perc_dist ~ target_distance*condition++(1+target_distance|subject)+(0+condition|subject),
-                 data = filter(results_tbl,type == "NORMAL"))
+m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance|subject,
+                method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
+                data = filter(results_tbl,type == "NORMAL"))
 extract_stats(ggcoefstats(m.Dist1))
-r.squaredGLMM(m.Dist1)
-
 anova(m.Dist1)
-anov1 = anova(m.Dist1)
+anov = anova(m.Dist1)
+
+
+# m.Dist1 <-  lmer(perc_dist ~ target_distance*condition++(1+target_distance|subject)+(0+condition|subject),
+#                  data = filter(results_tbl,type == "NORMAL"))
+# extract_stats(ggcoefstats(m.Dist1))
+# r.squaredGLMM(m.Dist1)
+# 
+# anova(m.Dist1)
+# anov1 = anova(m.Dist1)
 
 # m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(target_distance|subject),
 #                 data = filter(results_tbl,type == "NORMAL"))

@@ -78,14 +78,22 @@ f1
 #                 method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
 #                 data = filter(results_tbl,type == "NORMAL"))
 
-m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(1+target_distance|subject)+(0+condition|subject),
-                 data = filter(results_tbl,type == "NORMAL"))
+
+m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(target_distance:condition|subject),
+                data = filter(results_tbl,type == "NORMAL"))
 extract_stats(ggcoefstats(m.Dist1))
 r.squaredGLMM(m.Dist1)
 anova(m.Dist1)
 
-coefmodelpob = fixef(m.Dist1)
-coefmodelind = ranef(m.Dist1)
+# coefmodelpob = fixef(m.Dist1)
+# coefmodelind = ranef(m.Dist1)
+# a = filter(results_tbl,type == "NORMAL", condition == "Ear level")
+# b = filter(results_tbl,type == "NORMAL", condition == "Floor level")
+# 
+# a$slopeLMEL = coefmodelind$subject[[2]]+coefmodelpob[[2]]
+# b$slopeLMEL = coefmodelind$subject[[2]]+coefmodelpob[[2]]+coefmodelpob[[4]]
+# 
+# results_tblslop = merge(a, b, all=TRUE)
 
 results_tblp <- filter(results_tbl,type == "NORMAL") %>% 
   group_by(condition) %>%
@@ -207,7 +215,16 @@ Figure1 = ggarrange(f1,
                     common.legend = TRUE, legend="top", align = "hv")
 Figure1
 
-
+Figure1 = ggarrange(f1,
+                    f2,
+                    f3,
+                    f4,
+                    # ncol = 3, nrow = 1,labels = c("B", "C", "D"),
+                    # common.legend = FALSE, legend="none", align = "h")+theme(plot.margin = unit(c(-10,0,-50,0), 'cm')),
+                    heights = c(1, 1),
+                    ncol = 2, nrow = 2,labels = c("A", "B","C","D"),
+                    common.legend = TRUE, legend="top", align = "hv")
+Figure1
 # 
 # 
 # 
@@ -385,6 +402,18 @@ Figure2 = ggarrange(f5,
                     ncol = 2, nrow = 2,labels = c("A", "B","C","D"),
                     common.legend = TRUE, legend="top", align = "hv")
 Figure2
+
+Figure2 = ggarrange(f5,
+                    f6,
+                    f7,
+                    f8,
+                    # ncol = 3, nrow = 1,labels = c("B", "C", "D"),
+                    # common.legend = FALSE, legend="none", align = "h")+theme(plot.margin = unit(c(-10,0,-50,0), 'cm')),
+                    heights = c(1, 1),
+                    ncol = 2, nrow = 2,labels = c("A", "B","C","D"),
+                    common.legend = TRUE, legend="top", align = "hv")
+Figure2
+
 mi_nombre_de_archivo = paste("figuras", .Platform$file.sep, "FIG2. Experimento2", ".png", sep = '')
 ggsave(mi_nombre_de_archivo, plot=Figure2, width=18, height=15, units="cm", limitsize=FALSE, dpi=600)
 
