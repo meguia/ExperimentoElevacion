@@ -6,11 +6,71 @@ rm(list=ls())
 figures_folder = "figuras"
 
 #Data entry -----
-tabla.raw <- read.csv("./DatosUnificados/datacrudafinal2.csv", header = TRUE, sep = ';', stringsAsFactors = TRUE)
+rm(list=ls())
+figures_folder = "figuras"
+data_folder         = "./DatosUnificados/Datos nuevos sentados"
+cat('/* Importando datos desde la carpeta \'', data_folder, '\':\n', sep = '')
+
+c <- 0
+for (archivo in dir(data_folder, pattern = '*.csv')) {
+  
+  ruta_completa <- paste(data_folder, .Platform$file.sep, archivo, sep = '')
+  cat('- Cargando archivo: \'', ruta_completa, '\'\n', sep = '')
+  tabla_temp <- read.csv(ruta_completa, header = TRUE, sep = ',', stringsAsFactors = TRUE)
+  
+  if (c == 0)
+    tabla.raw <- tabla_temp
+  else
+    tabla.raw <- rbind(tabla.raw, tabla_temp)
+  
+  c <- c + 1
+}
+
+rm("c", "tabla_temp", "archivo", "ruta_completa")
+tabla.raw <- tabla.raw%>%
+  mutate(type = case_when(
+    condicion == 0 ~ "NORMAL",
+    condicion == 2 ~ "ROVED"
+  ))
+tabla.raw <- tabla.raw%>%
+  mutate(condition = case_when(
+    altura == 0 ~ "Floor level",
+    altura == 1 ~ "Ear level"
+  ))
+tabla.raw <- tabla.raw%>%
+  mutate(subject = case_when(
+    nsub == 1 ~ "T001",
+    nsub == 2 ~ "T001",
+    nsub == 3 ~ "T001",
+    nsub == 4 ~ "T001",
+    nsub == 5 ~ "T001",
+    nsub == 6 ~ "T001",
+    nsub == 7 ~ "T001",
+    nsub == 8 ~ "T001",
+    nsub == 9 ~ "T001",
+    nsub == 10 ~ "T001",
+    nsub == 11 ~ "T001",
+    nsub == 12 ~ "T001",
+    nsub == 13 ~ "T001"
+  ))
+tabla.raw = tabla.raw %>% rename(block = bloque)   # renombro columnas
+tabla.raw = tabla.raw %>% rename(trial = itrial)   # renombro columnas
+tabla.raw = tabla.raw %>% rename(percived_distance = respuesta)   # renombro columnas
+tabla.raw = tabla.raw %>% rename(target_distance = distancia)   # renombro columnas
+tabla.raw <- tabla.raw[ , !(names(tabla.raw) %in% c("nsub","altura","condicion"))]
+tabla.raw$location = "sitting"
+
+
+tabla.raw2 <- read.csv("./DatosUnificados/datacrudafinal2.csv", header = TRUE, sep = ';', stringsAsFactors = TRUE)
+tabla.raw2$location = "standing"
+tabla.raw = merge(x = tabla.raw, y = tabla.raw2, all = TRUE)
+rm("tabla.raw2")
+
+
 tabla.raw$abs_bias <-  tabla.raw$percived_distance - tabla.raw$target_distance
 tabla.raw$signed_bias <- (tabla.raw$percived_distance - tabla.raw$target_distance) / tabla.raw$target_distance
 tabla.raw$unsigned_bias <- abs(tabla.raw$signed_bias)
-idx = tabla.raw$subject == "13" | tabla.raw$percived_distance == 0.05
+idx = tabla.raw$subject == "S013" | tabla.raw$percived_distance == 0.05
 tabla.raw[idx,]$percived_distance = 0.5
 
 
@@ -20,7 +80,7 @@ f_promedio <- function(x) c(mean = mean(x),
                             sem  = sd(x)/sqrt(length(x)),
                             n    = length(x))
 
-results_tbl <- tibble(aggregate(cbind(percived_distance,signed_bias,unsigned_bias,abs_bias) ~ subject*block*condition*target_distance*type,
+results_tbl <- tibble(aggregate(cbind(percived_distance,signed_bias,unsigned_bias,abs_bias) ~ subject*block*condition*target_distance*type*location,
                                 data = tabla.raw,
                                 FUN  = f_promedio,na.action = NULL))
 
@@ -70,6 +130,7 @@ results_tbl %>%
          condition = factor(condition),
          type = factor(type),
          block = factor(block),
+         location = factor(location),
          
          perc_dist_sd = percived_distance[,"sd"],
          perc_dist_sem = percived_distance[,"sem"],

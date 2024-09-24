@@ -10,7 +10,7 @@ results_tbl <- read.csv("./DatosUnificados/Dresults.csv", header = TRUE, sep = '
 # Unsigned bias
 cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
 
-f2 <- filter(results_tbl,type == "NORMAL") %>% 
+f2 <- filter(results_tbl,type == "NORMAL", location == "sitting") %>% 
   group_by(subject,condition) %>%
   summarise(mBiasUnsigned  = mean(rel_bias_unsigned)) %>%
   ungroup() %>%
@@ -41,7 +41,7 @@ f2 <- filter(results_tbl,type == "NORMAL") %>%
 f2
 
 tabla.ind.Eye <- results_tbl %>% 
-  filter(condition == "Ear level", type == "NORMAL") %>% 
+  filter(condition == "Ear level", type == "NORMAL", location == "sitting") %>% 
   group_by(subject,condition) %>%
   summarise(mBiasUnsigned  = mean(rel_bias_unsigned ,na.rm=TRUE))  %>%
   ungroup()
