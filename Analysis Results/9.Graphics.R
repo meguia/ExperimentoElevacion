@@ -20,20 +20,49 @@ library(lattice)
 
 rm(list=ls())
 figures_folder = "figuras"
-results_tbl <- read.csv("./DatosUnificados/Dresults_without_outliers_slope_and_intercepto_lin_log.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
+results_tbl <- read.csv("./DatosUnificados/Dresults_without_outliers.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
 cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
 
+idx = results_tbl$subject == "T005"
+results_tbl = results_tbl[!idx,]
+
+results_tbl = results_tbl %>% filter(location == "sitting") %>%
+  ungroup()
 #LINEAL ----
 # PAD NORMAL
-m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance|subject,
+a = qplot(target_distance, perc_dist, data=filter(results_tbl,type == "ROVED"),group = condition, color = condition) + facet_wrap(~subject, nrow=3) + geom_smooth(method='lm')+  geom_abline(intercept = 0, slope = 1, linetype=2)+  theme_pubr(base_size = 12, margin = TRUE)+
+  theme(legend.position = "top",
+        legend.title = element_blank())
+
+a
+
+m.Dist1 <-  lme(perc_dist ~ target_distance*condition*type, random = ~target_distance|subject,
                 method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
-                data = filter(results_tbl,type == "NORMAL"))
+                data = results_tbl)
+
+anova(m.Dist1)
+
+
+m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(1+target_distance|subject)+(0+condition|subject),
+                 data = filter(results_tbl,type == "NORMAL"))
+extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+anova(m.Dist1)
+
+m.Dist1 <-  lmer(perc_dist ~ target_distance*condition*type+(1+target_distance|subject)+(0+condition|subject),
+                 data = results_tbl)
+extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+
+anova(m.Dist1)
+anov1 = anova(m.Dist1)
+
 
 eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
                   list(a = round(m.Dist1$coefficients$fixed[[2]],digits = 2),
                        b = round(m.Dist1$coefficients$fixed[[1]], digits = 2)))
 eq2 <- substitute("Floor level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
-                  list(a = round(m.Dist1$coefficients$fixed[[2]]+m.Dist1$coefficients$fixed[[4]], digits = 2),
+                  list(a = round(m.Dist1$coefficients$fixed[[2]]+m.Dist1$coefficients$fixed[[5]], digits = 2),
                        b = round(m.Dist1$coefficients$fixed[[1]]+m.Dist1$coefficients$fixed[[3]], digits = 2)))
 eq3 <- substitute("r.squared:"~~~italic(R)^italic(2) == italic(b), 
                   list(b = round(r.squaredGLMM(m.Dist1)[2], digits = 2)))
@@ -56,7 +85,7 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition,
               alpha = 0.5,
               size = 1.2,
               color = "#000000") +
-  geom_abline(slope =m.Dist1$coefficients$fixed[[2]]+m.Dist1$coefficients$fixed[[4]], 
+  geom_abline(slope =m.Dist1$coefficients$fixed[[2]]+m.Dist1$coefficients$fixed[[5]], 
               intercept =m.Dist1$coefficients$fixed[[1]]+m.Dist1$coefficients$fixed[[3]], 
               alpha = 0.5,
               size = 1.2,
@@ -64,8 +93,8 @@ f1 <- ggplot(tabla.pob, aes(x=target_distance, y =Mperc_dist, group = condition,
   geom_text(x = 1.1, y = 6.6, label = as.character(as.expression(eq1)), hjust = 0, nudge_x =  0, parse = TRUE, size = 3.5, color = "#000000")+
   geom_text(x = 1.1, y = 6.1, label = as.character(as.expression(eq2)), hjust = 0, nudge_x =  0,parse = TRUE, size = 3.5, color = "#E69F00")+
   #geom_text(x = 0.2, y = 6, label = as.character(as.expression(eq3)), hjust = 0, nudge_x =  0, parse = TRUE, size = 4, color = "#009E73")+
-  scale_x_continuous(name="Source distance (m)", limits = c(1,7)) +
-  scale_y_continuous(name="Perceived distance (m)",   limits = c(1,7)) +
+  scale_x_continuous(name="Source distance (m)", limits = c(0,7)) +
+  scale_y_continuous(name="Perceived distance (m)",   limits = c(0,7)) +
   ggtitle("Experiment 1")+
   theme_pubr(base_size = 12, margin = TRUE)+
   theme(legend.position = "top",
@@ -251,7 +280,7 @@ m.Dist1 <-  lme(perc_dist ~ target_distance*condition, random = ~target_distance
                 method = "ML", control =list(msMaxIter = 1000, msMaxEval = 1000),
                 data = filter(results_tbl,type == "ROVED"))
 
-
+anova(m.Dist1)
 eq1 <- substitute("Ear level:"~~~italic(y) == a %.% italic(X)+italic((b)), 
                   list(a = round(m.Dist1$coefficients$fixed[[2]],digits = 2),
                        b = round(m.Dist1$coefficients$fixed[[1]], digits = 2)))

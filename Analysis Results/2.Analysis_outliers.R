@@ -50,7 +50,7 @@ plot_outliers_mad(res3,x=tabla.ind.Eye$mBiasUnsigned,pos_display=TRUE)
 tabla.ind.Eye[res3$outliers_pos,] 
 
 tabla.ind.Floor <- results_tbl %>% 
-  filter(condition == "Floor level", type == "NORMAL") %>% 
+  filter(condition == "Floor level", type == "NORMAL", location == "sitting") %>% 
   group_by(subject,condition) %>%
   summarise(mBiasUnsigned  = mean(rel_bias_unsigned,threshold = 3 ,na.rm=TRUE))  %>%
   ungroup()
@@ -62,6 +62,10 @@ idx = results_tbl$subject == "S001"
 results_tbl = results_tbl[!idx,]
 idx = results_tbl$subject == "S003"
 results_tbl = results_tbl[!idx,]
+# idx = results_tbl$subject == "T005"
+# results_tbl = results_tbl[!idx,]
+# idx = results_tbl$subject == "T006"
+# results_tbl = results_tbl[!idx,]
 
 # idx = results_tbl$subject == "S001" & results_tbl$condition == "Floor level" & results_tbl$type == "ROVED"
 # results_tbl = results_tbl[!idx,]

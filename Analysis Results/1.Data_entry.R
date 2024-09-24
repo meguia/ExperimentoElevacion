@@ -40,18 +40,18 @@ tabla.raw <- tabla.raw%>%
 tabla.raw <- tabla.raw%>%
   mutate(subject = case_when(
     nsub == 1 ~ "T001",
-    nsub == 2 ~ "T001",
-    nsub == 3 ~ "T001",
-    nsub == 4 ~ "T001",
-    nsub == 5 ~ "T001",
-    nsub == 6 ~ "T001",
-    nsub == 7 ~ "T001",
-    nsub == 8 ~ "T001",
-    nsub == 9 ~ "T001",
-    nsub == 10 ~ "T001",
-    nsub == 11 ~ "T001",
-    nsub == 12 ~ "T001",
-    nsub == 13 ~ "T001"
+    nsub == 2 ~ "T002",
+    nsub == 3 ~ "T003",
+    nsub == 4 ~ "T004",
+    nsub == 5 ~ "T005",
+    nsub == 6 ~ "T006",
+    nsub == 7 ~ "T007",
+    nsub == 8 ~ "T008",
+    nsub == 9 ~ "T009",
+    nsub == 10 ~ "T010",
+    nsub == 11 ~ "T011",
+    nsub == 12 ~ "T012",
+    nsub == 13 ~ "T013"
   ))
 tabla.raw = tabla.raw %>% rename(block = bloque)   # renombro columnas
 tabla.raw = tabla.raw %>% rename(trial = itrial)   # renombro columnas
