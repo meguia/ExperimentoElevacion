@@ -3,14 +3,15 @@ library(Routliers)
 
 
 rm(list=ls())
-results_tbl <- read.csv("./DatosUnificados/Dresults.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
+# results_tbl <- read.csv("./DatosUnificados/Dresults.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
+results_tbl <- read.csv("./DatosUnificados/Dresults_without_outliers_slope_and_intercepto.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
 
 # Analysis Outliers 
 
 # Unsigned bias
 cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
 
-f2 <- filter(results_tbl,type == "NORMAL", location == "sitting") %>% 
+f2 <- filter(results_tbl,type == "NORMAL", location == "standing") %>% 
   group_by(subject,condition) %>%
   summarise(mBiasUnsigned  = mean(rel_bias_unsigned)) %>%
   ungroup() %>%
@@ -41,6 +42,34 @@ f2 <- filter(results_tbl,type == "NORMAL", location == "sitting") %>%
 f2
 
 tabla.ind.Eye <- results_tbl %>% 
+  filter(condition == "Ear level", type == "NORMAL", location == "standing") %>% 
+  group_by(subject,condition) %>%
+  summarise(mBiasUnsigned  = mean(rel_bias_unsigned ,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Eye$mBiasUnsigned,threshold = 3 ,na.rm=TRUE)
+plot_outliers_mad(res3,x=tabla.ind.Eye$mBiasUnsigned,pos_display=TRUE)
+tabla.ind.Eye[res3$outliers_pos,] 
+
+tabla.ind.Floor <- results_tbl %>% 
+  filter(condition == "Floor level", type == "NORMAL", location == "standing") %>% 
+  group_by(subject,condition) %>%
+  summarise(mBiasUnsigned  = mean(rel_bias_unsigned,threshold = 3 ,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Floor$mBiasUnsigned ,na.rm=TRUE)
+plot_outliers_mad(res3,x=tabla.ind.Floor$mBiasUnsigned,pos_display=TRUE)
+tabla.ind.Floor[res3$outliers_pos,]
+
+idx = results_tbl$subject == "S001"
+results_tbl = results_tbl[!idx,]
+idx = results_tbl$subject == "S003"
+results_tbl = results_tbl[!idx,]
+
+
+
+
+## Sentado
+
+tabla.ind.Eye <- results_tbl %>% 
   filter(condition == "Ear level", type == "NORMAL", location == "sitting") %>% 
   group_by(subject,condition) %>%
   summarise(mBiasUnsigned  = mean(rel_bias_unsigned ,na.rm=TRUE))  %>%
@@ -58,10 +87,9 @@ res3 <- outliers_mad(x = tabla.ind.Floor$mBiasUnsigned ,na.rm=TRUE)
 plot_outliers_mad(res3,x=tabla.ind.Floor$mBiasUnsigned,pos_display=TRUE)
 tabla.ind.Floor[res3$outliers_pos,]
 
-idx = results_tbl$subject == "S001"
-results_tbl = results_tbl[!idx,]
-idx = results_tbl$subject == "S003"
-results_tbl = results_tbl[!idx,]
+
+
+
 # idx = results_tbl$subject == "T005"
 # results_tbl = results_tbl[!idx,]
 # idx = results_tbl$subject == "T006"
@@ -71,6 +99,93 @@ results_tbl = results_tbl[!idx,]
 # results_tbl = results_tbl[!idx,]
 # idx = results_tbl$subject == "S003" & results_tbl$condition == "Floor level" & results_tbl$type == "ROVED"
 # results_tbl = results_tbl[!idx,]
+
+
+
+
+## Analisis por slope
+
+tabla.ind.Eye <- results_tbl %>% 
+  filter(condition == "Ear level", type == "NORMAL", location == "sitting") %>% 
+  group_by(subject,condition) %>%
+  summarise(mslope  = mean(slope ,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Eye$mslope,threshold = 3 ,na.rm=TRUE)
+plot_outliers_mad(res3,x=tabla.ind.Eye$mslope,pos_display=TRUE)
+tabla.ind.Eye[res3$outliers_pos,] 
+
+tabla.ind.Floor <- results_tbl %>% 
+  filter(condition == "Floor level", type == "NORMAL", location == "sitting") %>% 
+  group_by(subject,condition) %>%
+  summarise(mslope  = mean(slope ,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Floor$mslope,threshold = 3.1 ,na.rm=TRUE)
+plot_outliers_mad(res3,x=tabla.ind.Floor$mslope,pos_display=TRUE)
+tabla.ind.Floor[res3$outliers_pos,]
+
+## Parado
+
+tabla.ind.Eye <- results_tbl %>% 
+  filter(condition == "Ear level", type == "NORMAL", location == "standing") %>% 
+  group_by(subject,condition) %>%
+  summarise(mslope  = mean(slope ,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Eye$mslope,threshold = 3 ,na.rm=TRUE)
+plot_outliers_mad(res3,x=tabla.ind.Eye$mslope,pos_display=TRUE)
+tabla.ind.Eye[res3$outliers_pos,] 
+
+tabla.ind.Floor <- results_tbl %>% 
+  filter(condition == "Floor level", type == "NORMAL", location == "standing") %>% 
+  group_by(subject,condition) %>%
+  summarise(mslope  = mean(slope ,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Floor$mslope,threshold = 3 ,na.rm=TRUE)
+plot_outliers_mad(res3,x=tabla.ind.Floor$mslope,pos_display=TRUE)
+tabla.ind.Floor[res3$outliers_pos,]
+
+
+
+### INTERCEPT
+
+## Analisis por intercept
+
+tabla.ind.Eye <- results_tbl %>% 
+  filter(condition == "Ear level", type == "NORMAL", location == "sitting") %>% 
+  group_by(subject,condition) %>%
+  summarise(mslope  = mean(slope ,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Eye$mslope,threshold = 3 ,na.rm=TRUE)
+plot_outliers_mad(res3,x=tabla.ind.Eye$mslope,pos_display=TRUE)
+tabla.ind.Eye[res3$outliers_pos,] 
+
+tabla.ind.Floor <- results_tbl %>% 
+  filter(condition == "Floor level", type == "NORMAL", location == "sitting") %>% 
+  group_by(subject,condition) %>%
+  summarise(mslope  = mean(slope ,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Floor$mslope,threshold = 3.1 ,na.rm=TRUE)
+plot_outliers_mad(res3,x=tabla.ind.Floor$mslope,pos_display=TRUE)
+tabla.ind.Floor[res3$outliers_pos,]
+
+## Parado
+
+tabla.ind.Eye <- results_tbl %>% 
+  filter(condition == "Ear level", type == "NORMAL", location == "standing") %>% 
+  group_by(subject,condition) %>%
+  summarise(mintercepto  = mean(intercepto ,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Eye$mintercepto,threshold = 3 ,na.rm=TRUE)
+plot_outliers_mad(res3,x=tabla.ind.Eye$mintercepto,pos_display=TRUE)
+tabla.ind.Eye[res3$outliers_pos,] 
+
+tabla.ind.Floor <- results_tbl %>% 
+  filter(condition == "Floor level", type == "NORMAL", location == "standing") %>% 
+  group_by(subject,condition) %>%
+  summarise(mintercepto  = mean(intercepto ,na.rm=TRUE))  %>%
+  ungroup()
+res3 <- outliers_mad(x = tabla.ind.Floor$mintercepto,threshold = 3 ,na.rm=TRUE)
+plot_outliers_mad(res3,x=tabla.ind.Floor$mintercepto,pos_display=TRUE)
+tabla.ind.Floor[res3$outliers_pos,]
 
 
 
