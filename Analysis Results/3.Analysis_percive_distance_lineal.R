@@ -72,6 +72,9 @@ for (i in 1:length(levels(droplevels(results_tbl$subject)))) {
 }
 Figure1 = ggarrange(fig_normal[[1]],fig_normal[[2]],fig_normal[[3]],fig_normal[[4]],fig_normal[[5]],fig_normal[[6]],fig_normal[[7]],fig_normal[[8]],fig_normal[[9]],
                     fig_normal[[10]],fig_normal[[11]],fig_normal[[12]],fig_normal[[13]],
+                    fig_normal[[14]],fig_normal[[15]],fig_normal[[16]],
+                    fig_normal[[17]],fig_normal[[18]],fig_normal[[19]],
+                    fig_normal[[20]],fig_normal[[21]],
                     ncol = 4, nrow = 6,
                     common.legend = TRUE, legend="top", align = "hv")
 
@@ -154,6 +157,8 @@ for (i in 1:length(levels(droplevels(results_tbl$subject)))) {
 
 Figure2 = ggarrange(fig_roved[[1]],fig_roved[[2]],fig_roved[[3]],fig_roved[[4]],fig_roved[[5]],fig_roved[[6]],fig_roved[[7]],fig_roved[[8]],fig_roved[[9]],
                     fig_roved[[10]],fig_roved[[11]],fig_roved[[12]],fig_roved[[13]],
+                    fig_roved[[14]],fig_roved[[15]],fig_roved[[16]],fig_roved[[17]],
+                    fig_roved[[18]],fig_roved[[19]],fig_roved[[20]],fig_roved[[21]],
                     ncol = 4, nrow = 6,
                     common.legend = TRUE, legend="top", align = "hv")
 # Figure2 = ggarrange(fig_roved[[1]],fig_roved[[2]],fig_roved[[3]],fig_roved[[4]],fig_roved[[5]],fig_roved[[6]],fig_roved[[7]],fig_roved[[8]],fig_roved[[9]],

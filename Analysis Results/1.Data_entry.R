@@ -51,8 +51,17 @@ tabla.raw <- tabla.raw%>%
     nsub == 10 ~ "T010",
     nsub == 11 ~ "T011",
     nsub == 12 ~ "T012",
-    nsub == 13 ~ "T013"
+    nsub == 13 ~ "T013",
+    nsub == 14 ~ "T014",
+    nsub == 15 ~ "T015",
+    nsub == 16 ~ "T016",
+    nsub == 17 ~ "T017",
+    nsub == 18 ~ "T018",
+    nsub == 19 ~ "T019",
+    nsub == 20 ~ "T020",
+    nsub == 21 ~ "T021"
   ))
+
 tabla.raw = tabla.raw %>% rename(block = bloque)   # renombro columnas
 tabla.raw = tabla.raw %>% rename(trial = itrial)   # renombro columnas
 tabla.raw = tabla.raw %>% rename(percived_distance = respuesta)   # renombro columnas
