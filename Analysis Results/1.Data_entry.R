@@ -79,7 +79,7 @@ rm("tabla.raw2")
 tabla.raw$abs_bias <-  tabla.raw$percived_distance - tabla.raw$target_distance
 tabla.raw$signed_bias <- (tabla.raw$percived_distance - tabla.raw$target_distance) / tabla.raw$target_distance
 tabla.raw$unsigned_bias <- abs(tabla.raw$signed_bias)
-idx = tabla.raw$subject == "S013" | tabla.raw$percived_distance == 0.05
+idx = tabla.raw$subject == "S013" & tabla.raw$percived_distance == 0.05
 tabla.raw[idx,]$percived_distance = 0.5
 
 

@@ -25,17 +25,16 @@ cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "
 
 idx = results_tbl$subject == "T005"
 results_tbl = results_tbl[!idx,]
-# idx = results_tbl$subject == "T006"
-# results_tbl = results_tbl[!idx,]
-
-idx = results_tbl$subject == "S001"
+idx = results_tbl$subject == "S010"
 results_tbl = results_tbl[!idx,]
 idx = results_tbl$subject == "S003"
 results_tbl = results_tbl[!idx,]
-# idx = results_tbl$subject == "S018"
-# results_tbl = results_tbl[!idx,]
-# idx = results_tbl$subject == "S019"
-# results_tbl = results_tbl[!idx,]
+idx = results_tbl$subject == "S012"
+results_tbl = results_tbl[!idx,]
+idx = results_tbl$subject == "S019"
+results_tbl = results_tbl[!idx,]
+idx = results_tbl$subject == "S017"
+results_tbl = results_tbl[!idx,]
 
 
 results_tbl = results_tbl %>% filter(location == "sitting") %>%
@@ -573,17 +572,25 @@ ggsave(mi_nombre_de_archivo, plot=Figure2, width=18, height=15, units="cm", limi
 #                     common.legend = TRUE, legend="top", align = "h")
 # Figure2
 # 
-
+rm(list=ls())
+figures_folder = "figuras"
 results_tbl <- read.csv("./DatosUnificados/Dresults_without_outliers_slope_and_intercepto.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
 cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
 
 idx = results_tbl$subject == "T005"
 results_tbl = results_tbl[!idx,]
-idx = results_tbl$subject == "S012"
+# idx = results_tbl$subject == "S013"
+# results_tbl = results_tbl[!idx,]
+idx = results_tbl$subject == "S001" & results_tbl$condition == "Floor level"
 results_tbl = results_tbl[!idx,]
-idx = results_tbl$subject == "S003"
+idx = results_tbl$subject == "S003" & results_tbl$type == "ROVED"
 results_tbl = results_tbl[!idx,]
-
+idx = results_tbl$subject == "S003"& results_tbl$condition == "Ear level" & results_tbl$type == "NORMAL"
+results_tbl = results_tbl[!idx,]
+idx = results_tbl$subject == "S012"& results_tbl$condition == "Ear level"& results_tbl$type == "ROVED"
+results_tbl = results_tbl[!idx,]
+idx = results_tbl$subject == "S019"& results_tbl$condition == "Ear level"& results_tbl$type == "ROVED"
+results_tbl = results_tbl[!idx,]
 
 
 m.Dist1 <-  lmer(perc_dist ~ target_distance*condition*location+(1+target_distance|subject)+(0+condition|subject),
@@ -631,12 +638,33 @@ ggsave(mi_nombre_de_archivo, plot=Final.Fixed.Plot, width=10, height=10, units="
 
 
 
+m.Dist1 <-  lmer(perc_dist ~ target_distance*location+(1+target_distance|subject)+(0+location|subject),
+                 data = filter(results_tbl,condition == "Ear level",type == "ROVED"))
+extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+anova(m.Dist1)
+m.Dist1 <-  lmer(perc_dist ~ target_distance*location+(1+target_distance|subject)+(0+location|subject),
+                 data = filter(results_tbl,condition == "Floor level",type == "ROVED"))
+extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+anova(m.Dist1)
+m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(1+target_distance|subject)+(0+condition|subject),
+                 data = filter(results_tbl,location == "standing",type == "ROVED"))
+extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+anova(m.Dist1)
+m.Dist1 <-  lmer(perc_dist ~ target_distance*condition+(1+target_distance|subject)+(0+condition|subject),
+                 data = filter(results_tbl,location == "sitting",type == "ROVED"))
+extract_stats(ggcoefstats(m.Dist1))
+r.squaredGLMM(m.Dist1)
+anova(m.Dist1)
+
+
 m.Dist1 <-  lmer(perc_dist ~ target_distance*condition*location+(1+target_distance|subject)+(0+condition|subject),
                  data = filter(results_tbl,type == "ROVED"))
 extract_stats(ggcoefstats(m.Dist1))
 r.squaredGLMM(m.Dist1)
 anova(m.Dist1)
-
 
 tabla.pob = filter(results_tbl,type == "ROVED") %>% group_by(target_distance,condition,location) %>%
   summarise(Mperc_dist  = mean(perc_dist),
@@ -662,15 +690,17 @@ Final.Fixed.Plot <-ggplot(data = Final.Fixed, aes(x = target_distance, y =fit, g
   scale_color_manual(values=cbPalette)+
   scale_fill_manual(values=cbPalette)+
   theme_bw()+
-  ggtitle("ROVED")+
+  # ggtitle("ROVED")+
+  # facet_grid(.~location)+
+  # facet_grid(.~condition)+
   theme(text=element_text(face="bold", size=12),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), 
         legend.title=element_blank(),
-        legend.position = c(.2, .82))
+        legend.position = "top")
 Final.Fixed.Plot
 f5 = Final.Fixed.Plot
-mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "ROVED", ".png", sep = '')
+mi_nombre_de_archivo = paste(figures_folder, .Platform$file.sep, "ROVED todas", ".png", sep = '')
 ggsave(mi_nombre_de_archivo, plot=Final.Fixed.Plot, width=10, height=10, units="cm", limitsize=FALSE, dpi=600)
 
 

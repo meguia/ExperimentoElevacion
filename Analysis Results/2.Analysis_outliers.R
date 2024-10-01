@@ -4,14 +4,14 @@ library(Routliers)
 
 rm(list=ls())
 results_tbl <- read.csv("./DatosUnificados/Dresults.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
-# results_tbl <- read.csv("./DatosUnificados/Dresults_without_outliers_slope_and_intercepto.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
+results_tbl <- read.csv("./DatosUnificados/Dresults_without_outliers_slope_and_intercepto.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
 
 # Analysis Outliers 
 
 # Unsigned bias
 cbPalette <- c("#000000","#E69F00","#009E73", "#999999", "#D55E00", "#0072B2", "#CC79A7", "#F0E442")
 
-f2 <- filter(results_tbl,type == "NORMAL", location == "standing") %>% 
+f2 <- filter(results_tbl,type == "ROVED", location == "standing") %>% 
   group_by(subject,condition) %>%
   summarise(mBiasUnsigned  = mean(rel_bias_signed)) %>%
   ungroup() %>%
@@ -42,18 +42,18 @@ f2 <- filter(results_tbl,type == "NORMAL", location == "standing") %>%
 f2
 
 tabla.ind.Eye <- results_tbl %>% 
-  filter(condition == "Ear level", type == "NORMAL", location == "standing") %>% 
+  filter(condition == "Ear level", type == "ROVED", location == "standing") %>% 
   group_by(subject,condition) %>%
-  summarise(mBiasUnsigned  = mean(rel_bias_signed ,na.rm=TRUE))  %>%
+  summarise(mBiasUnsigned  = mean(rel_bias_unsigned ,na.rm=TRUE))  %>%
   ungroup()
-res3 <- outliers_mad(x = tabla.ind.Eye$mBiasUnsigned,threshold = 3 ,na.rm=TRUE)
+res3 <- outliers_mad(x = tabla.ind.Eye$mBiasUnsigned,threshold = 2 ,na.rm=TRUE)
 plot_outliers_mad(res3,x=tabla.ind.Eye$mBiasUnsigned,pos_display=TRUE)
 tabla.ind.Eye[res3$outliers_pos,] 
 
 tabla.ind.Floor <- results_tbl %>% 
-  filter(condition == "Floor level", type == "NORMAL", location == "standing") %>% 
+  filter(condition == "Floor level", type == "ROVED", location == "standing") %>% 
   group_by(subject,condition) %>%
-  summarise(mBiasUnsigned  = mean(rel_bias_signed,threshold = 3 ,na.rm=TRUE))  %>%
+  summarise(mBiasUnsigned  = mean(rel_bias_unsigned,threshold = 3 ,na.rm=TRUE))  %>%
   ungroup()
 res3 <- outliers_mad(x = tabla.ind.Floor$mBiasUnsigned ,na.rm=TRUE)
 plot_outliers_mad(res3,x=tabla.ind.Floor$mBiasUnsigned,pos_display=TRUE)
@@ -106,7 +106,7 @@ f2
 
 
 tabla.ind.Eye <- results_tbl %>% 
-  filter(condition == "Ear level", type == "NORMAL", location == "sitting") %>% 
+  filter(condition == "Ear level", type == "NORMAL", location == "standing") %>% 
   group_by(subject,condition) %>%
   summarise(mBiasUnsigned  = mean(rel_bias_signed ,na.rm=TRUE))  %>%
   ungroup()
