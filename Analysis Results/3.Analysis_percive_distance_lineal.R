@@ -335,6 +335,7 @@ ggsave(mi_nombre_de_archivo, plot=Figure2, width=27, height=35, units="cm", limi
 results_tbl_standing = results_tbl
 
 results_tbl = merge(x = results_tbl_sitting, y = results_tbl_standing, all = TRUE)
-
+results_tbl
 # Write_csv with SLOPE AND INTERCEPTO
 write_csv(results_tbl, "./DatosUnificados/Dresults_without_outliers_slope_and_intercepto.csv")
+

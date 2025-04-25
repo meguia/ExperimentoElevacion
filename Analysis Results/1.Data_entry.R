@@ -75,12 +75,30 @@ tabla.raw2$location = "standing"
 tabla.raw = merge(x = tabla.raw, y = tabla.raw2, all = TRUE)
 rm("tabla.raw2")
 
-
+idx = tabla.raw$subject == "S013" & tabla.raw$percived_distance == 0.05
+tabla.raw[idx,]$percived_distance = 0.5
 tabla.raw$abs_bias <-  tabla.raw$percived_distance - tabla.raw$target_distance
 tabla.raw$signed_bias <- (tabla.raw$percived_distance - tabla.raw$target_distance) / tabla.raw$target_distance
 tabla.raw$unsigned_bias <- abs(tabla.raw$signed_bias)
-idx = tabla.raw$subject == "S013" & tabla.raw$percived_distance == 0.05
-tabla.raw[idx,]$percived_distance = 0.5
+tabla.raw$log_bias = log10(tabla.raw$percived_distance / tabla.raw$target_distance)
+tabla.raw$log_bias_un = abs(tabla.raw$log_bias)
+
+
+tabla.raw$antilog =  10^tabla.raw$log_bias - 1
+tabla.raw$absantilog = abs(tabla.raw$antilog)
+tabla.raw$antilog_un =  10^tabla.raw$log_bias_un
+
+
+
+tabla.raw$antilog_un_p <- ifelse(
+  tabla.raw$antilog_un >= 1,
+  (tabla.raw$antilog_un - 1),
+  (1/tabla.raw$antilog_un - 1)
+)
+
+
+# idx = tabla.raw$subject == "S013" & tabla.raw$percived_distance == 0.05
+# tabla.raw[idx,]$percived_distance = 0.5
 
 
 f_promedio <- function(x) c(mean = mean(x),
@@ -89,7 +107,7 @@ f_promedio <- function(x) c(mean = mean(x),
                             sem  = sd(x)/sqrt(length(x)),
                             n    = length(x))
 
-results_tbl <- tibble(aggregate(cbind(percived_distance,signed_bias,unsigned_bias,abs_bias) ~ subject*block*condition*target_distance*type*location,
+results_tbl <- tibble(aggregate(cbind(percived_distance,signed_bias,unsigned_bias,abs_bias,log_bias,log_bias_un,antilog,absantilog,antilog_un,antilog_un_p) ~ subject*block*condition*target_distance*type*location,
                                 data = tabla.raw,
                                 FUN  = f_promedio,na.action = NULL))
 
@@ -135,38 +153,80 @@ results_tbl <- tibble(aggregate(cbind(percived_distance,signed_bias,unsigned_bia
 
 results_tbl %>%
   # clean_names() %>%
-  mutate(subject = factor(subject),
-         condition = factor(condition),
-         type = factor(type),
-         block = factor(block),
-         location = factor(location),
-         
-         perc_dist_sd = percived_distance[,"sd"],
-         perc_dist_sem = percived_distance[,"sem"],
-         perc_dist_var = percived_distance[,"var"],
-         perc_dist_n = percived_distance[,"n"],
-         perc_dist = percived_distance[,"mean"],
-         
-         rel_bias_signed_sd = signed_bias[,"sd"],
-         rel_bias_signed_sem = signed_bias[,"sem"],
-         rel_bias_signed_var = signed_bias[,"var"],
-         rel_bias_signed_n = signed_bias[,"n"],
-         rel_bias_signed = signed_bias[,"mean"],
+mutate(subject = factor(subject),
+       condition = factor(condition),
+       type = factor(type),
+       block = factor(block),
+       location = factor(location),
 
-         rel_bias_unsigned_sd = unsigned_bias[,"sd"],
-         rel_bias_unsigned_sem = unsigned_bias[,"sem"],
-         rel_bias_unsigned_var = unsigned_bias[,"var"],
-         rel_bias_unsigned_n = unsigned_bias[,"n"],
-         rel_bias_unsigned = unsigned_bias[,"mean"],
+       perc_dist_sd = percived_distance[,"sd"],
+       perc_dist_sem = percived_distance[,"sem"],
+       perc_dist_var = percived_distance[,"var"],
+       perc_dist_n = percived_distance[,"n"],
+       perc_dist = percived_distance[,"mean"],
 
-         abs_bias_sd = abs_bias[,"sd"],
-         abs_bias_sem = abs_bias[,"sem"],
-         abs_bias_var = abs_bias[,"var"],
-         abs_bias_n = abs_bias[,"n"],
-         abs_bias = abs_bias[,"mean"]) %>%
+       rel_bias_signed_sd = signed_bias[,"sd"],
+       rel_bias_signed_sem = signed_bias[,"sem"],
+       rel_bias_signed_var = signed_bias[,"var"],
+       rel_bias_signed_n = signed_bias[,"n"],
+       rel_bias_signed = signed_bias[,"mean"],
+
+       rel_bias_unsigned_sd = unsigned_bias[,"sd"],
+       rel_bias_unsigned_sem = unsigned_bias[,"sem"],
+       rel_bias_unsigned_var = unsigned_bias[,"var"],
+       rel_bias_unsigned_n = unsigned_bias[,"n"],
+       rel_bias_unsigned = unsigned_bias[,"mean"],
+
+       log_bias_sd = log_bias[,"sd"],
+       log_bias_sem = log_bias[,"sem"],
+       log_bias_var = log_bias[,"var"],
+       log_bias_n = log_bias[,"n"],
+       log_bias_mean = log_bias[,"mean"],
+
+       log_bias_sd_un = log_bias_un[,"sd"],
+       log_bias_sem_un = log_bias_un[,"sem"],
+       log_bias_var_un = log_bias_un[,"var"],
+       log_bias_n_un = log_bias_un[,"n"],
+       log_bias_un_mean = log_bias_un[,"mean"],
+       
+       antilog_bias_sd = antilog[,"sd"],
+       antilog_bias_sem = antilog[,"sem"],
+       antilog_bias_var = antilog[,"var"],
+       antilog_bias_n = antilog[,"n"],
+       antilog_bias_mean = antilog[,"mean"],
+
+       absantilog_bias_sd = absantilog[,"sd"],
+       absantilog_bias_sem = absantilog[,"sem"],
+       absantilog_bias_var = absantilog[,"var"],
+       absantilog_bias_n = absantilog[,"n"],
+       absantilog_bias_mean = absantilog[,"mean"],
+
+       antilog_bias_sd_un = antilog_un[,"sd"],
+       antilog_bias_sem_un = antilog_un[,"sem"],
+       antilog_bias_var_un = antilog_un[,"var"],
+       antilog_bias_n_un = antilog_un[,"n"],
+       antilog_bias_un_mean = antilog_un[,"mean"],
+
+       antilog_bias_sd_un_p = antilog_un_p[,"sd"],
+       antilog_bias_sem_un_p = antilog_un_p[,"sem"],
+       antilog_bias_var_un_p = antilog_un_p[,"var"],
+       antilog_bias_n_un_p = antilog_un_p[,"n"],
+       antilog_bias_un_p_mean = antilog_un_p[,"mean"],
+
+       abs_bias_sd = abs_bias[,"sd"],
+       abs_bias_sem = abs_bias[,"sem"],
+       abs_bias_var = abs_bias[,"var"],
+       abs_bias_n = abs_bias[,"n"],
+       abs_bias_mean = abs_bias[,"mean"]) %>%
   
-select(-c(percived_distance,signed_bias,unsigned_bias,abs_bias)) %>%
   
-write_csv("./DatosUnificados/Dresults.csv")
+select(-c(percived_distance,signed_bias,unsigned_bias,abs_bias,log_bias,log_bias_un,
+          antilog,absantilog,antilog_un,antilog_un_p)) %>%
+  
+  write_csv("./DatosUnificados/Dresults.csv")
+
+results_tbl2 <- read.csv("./DatosUnificados/Dresults.csv", header = TRUE, sep = ',', stringsAsFactors = TRUE)
+
+
 
 
